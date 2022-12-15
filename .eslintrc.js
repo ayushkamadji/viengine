@@ -26,6 +26,7 @@ module.exports = {
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/ignoreRestSiblings": "off",
     "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/no-namespace": "off",
   },
   settings: {
     react: {

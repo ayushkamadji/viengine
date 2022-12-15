@@ -1,4 +1,4 @@
-import { Event as ViEvent } from "./event"
+import { Event as ViEvent, KeyDownEvent, KeyUpEvent } from "./event"
 
 export interface ApplicationWindow {
   setEventCallback(callback: (event: ViEvent) => void): void
@@ -17,14 +17,24 @@ export class BrowserWindow implements ApplicationWindow {
     this.eventHandler = callback
   }
 
-  private onWindowEvent(type: string): (event: Event) => void {
-    //TODO: map type strings to ViewEvent types
+  private onWindowEvent(type: "keydown" | "keyup"): (event: Event) => void {
+    //TODO: map type strings to ViEvent types
 
     const handleFn = (event: Event) => {
-      const e: ViEvent = {
-        type: type,
-        handled: false,
+      let e: ViEvent = {
+        type: "unknown",
+        handled: true,
       }
+      if (type === "keydown") {
+        e = new KeyDownEvent((event as KeyboardEvent).key)
+        if ((event as KeyboardEvent).repeat) {
+          ;(e as KeyDownEvent).isRepeat = true
+        }
+      } else if (type === "keyup") {
+        e = new KeyUpEvent((event as KeyboardEvent).key)
+      }
+
+      console.log({ e })
 
       this.eventHandler(e)
 
