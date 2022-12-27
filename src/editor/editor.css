@@ -12,3 +12,20 @@
   height: 2px;
   width: 2px;
 }
+
+.ui-cursor {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #0f0;
+  animation: blink 1s steps(2, jump-none) infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

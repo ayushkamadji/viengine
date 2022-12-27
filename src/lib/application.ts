@@ -1,3 +1,4 @@
+import "reflect-metadata"
 import { Logger } from "./logger"
 import { ApplicationWindow } from "./window"
 import { Event } from "./event"
