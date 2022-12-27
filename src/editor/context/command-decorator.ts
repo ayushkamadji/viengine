@@ -7,10 +7,6 @@ export interface CommandMetadata {
   commandName?: string
 }
 
-// const defaultMetadata = {
-//   [COMMAND_NAME_METADATA]: "",
-// }
-
 export const Command = (commandName: string) => {
   return (
     _target: object,

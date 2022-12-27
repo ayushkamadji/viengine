@@ -49,8 +49,6 @@ export class NodeCreationContext extends AbstractContext {
           EditorLayer.RECT_SIZE / 2
       )
     )
-    console.log({ document: this.editorService.document })
-    console.log("Node created")
     this.exit()
   }
 }
