@@ -1,3 +1,4 @@
+import { CanvasRenderer } from "../../lib/canvas-renderer"
 import { UIRenderer } from "../../lib/ui-renderer"
 
 export type Entity = number
@@ -142,5 +143,40 @@ export class UIRendererSystem implements ManagedSystem {
     }
 
     this.uiRenderer.render()
+  }
+}
+
+export class CanvasRendererSystem implements ManagedSystem {
+  static requiredComponents: ComponentClass[] = [CanvasRendererComponent]
+
+  constructor(
+    private entityManager: EntityManager,
+    private canvasRenderer: CanvasRenderer
+  ) {}
+
+  update(): void {
+    this.canvasRenderer.clear()
+
+    const entities = this.entityManager.getEntitiesWithComponents(
+      CanvasRendererSystem.requiredComponents
+    )
+
+    for (const entity of entities) {
+      const container = this.entityManager.getEntityComponentContainer(entity)
+      const component: CanvasRendererComponent = container.get(
+        CanvasRendererComponent
+      )
+
+      const elementBuilder = this.canvasRenderer
+        .getElementBuilder()
+        .withElementName(component.elementName)
+        .withID(component.elementID)
+        .withAttributes(component.attributes)
+        .build()
+
+      this.canvasRenderer.addElement(elementBuilder)
+    }
+
+    this.canvasRenderer.render()
   }
 }

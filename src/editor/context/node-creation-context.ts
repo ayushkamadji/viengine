@@ -1,7 +1,7 @@
 import { Event } from "../../lib/event"
 import { AbstractContext, Context } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
-import { ViEditor, EditorService, Util } from "../editor"
+import { ViEditor, EditorService } from "../editor"
 import { Command, CommandContext } from "./command-decorator"
 
 //TODO: move to json
@@ -39,11 +39,12 @@ export class NodeCreationContext extends AbstractContext {
 
   @Command("createNode")
   private createNode(): void {
-    const { col, row } = this.editorService.getCursorPosition()
-    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
-    this.editorService.document.addElement(
-      new ViEditor.Node(this.editorService.generateEntity(), x, y)
+    this.editorService.addElementAtCursor(
+      new ViEditor.Node(this.editorService.generateEntity())
     )
+    // this.editorService.document.addElement(
+    //   new ViEditor.Node(this.editorService.generateEntity(), x, y)
+    // )
     this.exit()
   }
 }

@@ -34,8 +34,6 @@ export class BrowserWindow implements ApplicationWindow {
         e = new KeyUpEvent((event as KeyboardEvent).key)
       }
 
-      console.log({ e })
-
       this.eventHandler(e)
 
       if (e.handled) {

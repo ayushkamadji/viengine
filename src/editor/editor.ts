@@ -6,6 +6,8 @@ import { ContextNavigator } from "./context/context-navigator"
 import "./editor.css"
 import { RootContext } from "./context/root-context"
 import {
+  CanvasRendererComponent,
+  CanvasRendererSystem,
   Entity,
   EntityManager,
   UIRendererComponent,
@@ -15,10 +17,10 @@ import {
 export class EditorService {
   constructor(
     readonly document: ViEditor.Document,
-    private readonly entityIDManager: EntityIDManager,
     private readonly entityManager: EntityManager,
     private readonly cursorEntity: Entity,
-    private readonly ui: UI
+    private readonly ui: UI,
+    private readonly canvas: Canvas
   ) {}
 
   generateEntity(): number {
@@ -41,6 +43,43 @@ export class EditorService {
 
   getCursorPosition(): { col: number; row: number } {
     return this.ui.cursor
+  }
+
+  addElementAtCursor(element: ViEditor.Element) {
+    this.canvas.document.addElement(element)
+
+    if (element instanceof ViEditor.Node) {
+      const entity: Entity = element.entityID
+
+      const [x, y] = this.getCursorXY()
+      element.x = x
+      element.y = y
+
+      const attributes: Map<string, string | number> = new Map<
+        string,
+        string | number
+      >([
+        ["x", element.x],
+        ["y", element.y],
+        ["width", EditorLayer.RECT_SIZE],
+        ["height", EditorLayer.RECT_SIZE],
+        ["stroke", "white"],
+      ])
+
+      const canvasRendererComponent: CanvasRendererComponent =
+        new CanvasRendererComponent(
+          "rect",
+          element.entityID.toString(),
+          [],
+          attributes
+        )
+
+      this.entityManager.addComponent(entity, canvasRendererComponent)
+    }
+  }
+
+  private getCursorXY() {
+    return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
   }
 }
 
@@ -81,17 +120,17 @@ export class EditorLayer implements Layer {
   static GRID_DOT_SIZE = 2
   private contextNavigator: ContextNavigator
   private document: ViEditor.Document = new ViEditor.Document()
-  private entityIDManager: EntityIDManager = new EntityIDManager()
-  private ui: UI
+  private ui: UI = new UI()
+  private canvas: Canvas = new Canvas()
   private entityManager: EntityManager
   private uiRendererSystem: UIRendererSystem
+  private canvasRendererSystem: CanvasRendererSystem
   private editorService: EditorService
 
   constructor(
     private readonly uiRenderer: UIRenderer,
     private readonly canvasRenderer: CanvasRenderer
   ) {
-    this.ui = new UI()
     this.contextNavigator = new ContextNavigator()
     this.entityManager = new EntityManager()
 
@@ -100,14 +139,19 @@ export class EditorLayer implements Layer {
       this.uiRenderer
     )
 
+    this.canvasRendererSystem = new CanvasRendererSystem(
+      this.entityManager,
+      this.canvasRenderer
+    )
+
     const cursorEntity = this.entityManager.createEntity()
 
     this.editorService = new EditorService(
       this.document,
-      this.entityIDManager,
       this.entityManager,
       cursorEntity,
-      this.ui
+      this.ui,
+      this.canvas
     )
 
     const rootContext = new RootContext(
@@ -133,27 +177,7 @@ export class EditorLayer implements Layer {
   }
 
   private renderCanvas() {
-    this.canvasRenderer.clear()
-    for (const element of this.document.children) {
-      if (element instanceof ViEditor.Node) {
-        const canvasElement = this.canvasRenderer
-          .getElementBuilder()
-          .withElementName("rect")
-          .withID(element.entityID.toString())
-          .withAttributes(
-            new Map([
-              ["x", element.x],
-              ["y", element.y],
-              ["width", EditorLayer.RECT_SIZE],
-              ["height", EditorLayer.RECT_SIZE],
-            ])
-          )
-          .withAttribute("stroke", "white")
-          .build()
-        this.canvasRenderer.addElement(canvasElement)
-      }
-    }
-    this.canvasRenderer.render()
+    this.canvasRendererSystem.update()
   }
 
   private renderUI() {
@@ -196,7 +220,7 @@ export class EditorLayer implements Layer {
 
 export namespace ViEditor {
   export interface Element {
-    entityID: number
+    readonly entityID: number
     name: string
     children?: Element[]
   }
@@ -204,7 +228,12 @@ export namespace ViEditor {
   export class Node implements Element {
     name = "node"
     text = ""
-    constructor(public entityID: number, public x: number, public y: number) {
+
+    constructor(
+      public entityID: number,
+      public x: number = 0,
+      public y: number = 0
+    ) {
       this.text = entityID.toString()
     }
   }
@@ -217,14 +246,5 @@ export namespace ViEditor {
     addElement(element: Element): void {
       this.children.push(element)
     }
-  }
-}
-
-// TODO: Remove this
-class EntityIDManager {
-  private entityIDCounter = 1
-
-  getNewEntityID(): number {
-    return this.entityIDCounter++
   }
 }
