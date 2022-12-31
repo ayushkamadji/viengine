@@ -28,6 +28,7 @@
     "@commitlint/cli": "^17.3.0",
     "@commitlint/config-conventional": "^17.3.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
+    "@types/d3-polygon": "^3.0.0",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
@@ -69,5 +70,8 @@
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "d3-polygon": "^3.0.1"
   }
 }

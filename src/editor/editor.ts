@@ -5,15 +5,54 @@ import { UIRenderer } from "../lib/ui-renderer"
 import { ContextNavigator } from "./context/context-navigator"
 import "./editor.css"
 import { RootContext } from "./context/root-context"
+import {
+  Entity,
+  EntityManager,
+  UIRendererComponent,
+  UIRendererSystem,
+} from "./ecs/entity-component-system"
 
-class EditorService {
+export class EditorService {
   constructor(
     readonly document: ViEditor.Document,
-    private readonly entityIDManager: EntityIDManager
+    private readonly entityIDManager: EntityIDManager,
+    private readonly entityManager: EntityManager,
+    private readonly cursorEntity: Entity,
+    private readonly ui: UI
   ) {}
 
-  generateEntityID(): number {
-    return this.entityIDManager.getNewEntityID()
+  generateEntity(): number {
+    return this.entityManager.createEntity()
+  }
+
+  getCursorEntity(): Entity {
+    return this.cursorEntity
+  }
+
+  setCursorPosition(col: number, row: number) {
+    this.ui.setCursorPosition(col, row)
+    const rendererComponent: UIRendererComponent = this.entityManager
+      .getEntityComponentContainer(this.cursorEntity)
+      .get(UIRendererComponent)
+    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
+    rendererComponent.x = x
+    rendererComponent.y = y
+  }
+
+  getCursorPosition(): { col: number; row: number } {
+    return this.ui.cursor
+  }
+}
+
+export class Util {
+  static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
+    const x =
+      (col + 1) * EditorLayer.GRID_GAP -
+      (EditorLayer.CURSOR_SIZE - EditorLayer.GRID_DOT_SIZE) / 2
+    const y =
+      (row + 1) * EditorLayer.GRID_GAP -
+      (EditorLayer.CURSOR_SIZE - EditorLayer.GRID_DOT_SIZE) / 2
+    return [x, y]
   }
 }
 
@@ -31,18 +70,22 @@ export class UI {
   }
 }
 
+export class Canvas {
+  document: ViEditor.Document = new ViEditor.Document()
+}
+
 export class EditorLayer implements Layer {
   static GRID_GAP = 40
   static CURSOR_SIZE = 6
   static RECT_SIZE = 30
+  static GRID_DOT_SIZE = 2
   private contextNavigator: ContextNavigator
   private document: ViEditor.Document = new ViEditor.Document()
   private entityIDManager: EntityIDManager = new EntityIDManager()
-  private editorService: EditorService = new EditorService(
-    this.document,
-    this.entityIDManager
-  )
   private ui: UI
+  private entityManager: EntityManager
+  private uiRendererSystem: UIRendererSystem
+  private editorService: EditorService
 
   constructor(
     private readonly uiRenderer: UIRenderer,
@@ -50,13 +93,32 @@ export class EditorLayer implements Layer {
   ) {
     this.ui = new UI()
     this.contextNavigator = new ContextNavigator()
+    this.entityManager = new EntityManager()
+
+    this.uiRendererSystem = new UIRendererSystem(
+      this.entityManager,
+      this.uiRenderer
+    )
+
+    const cursorEntity = this.entityManager.createEntity()
+
+    this.editorService = new EditorService(
+      this.document,
+      this.entityIDManager,
+      this.entityManager,
+      cursorEntity,
+      this.ui
+    )
+
     const rootContext = new RootContext(
-      this.ui,
       this.editorService,
       this.contextNavigator
     )
     this.contextNavigator.registerContext("root", rootContext)
     this.contextNavigator.navigateTo("root")
+
+    this.addUIGrid()
+    this.addCursor(cursorEntity)
     this.render()
   }
 
@@ -95,28 +157,21 @@ export class EditorLayer implements Layer {
   }
 
   private renderUI() {
-    this.uiRenderer.clear()
-    this.addUIGrid()
-    this.addCursor()
-    this.uiRenderer.render()
+    this.uiRendererSystem.update()
   }
 
-  private addCursor() {
-    const cursorElement = this.uiRenderer
-      .getElementBuilder()
-      .withClass("ui-cursor")
-      .withID("ui-cursor")
-      .withX(
-        (this.ui.cursor.col + 1) * EditorLayer.GRID_GAP -
-          EditorLayer.CURSOR_SIZE / 2
-      )
-      .withY(
-        (this.ui.cursor.row + 1) * EditorLayer.GRID_GAP -
-          EditorLayer.CURSOR_SIZE / 2
-      )
-      .build()
+  private addCursor(entity: Entity) {
+    const { col, row } = this.ui.cursor
+    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
+    const uiRendererComponent = new UIRendererComponent(
+      "div",
+      "ui-cursor",
+      ["ui-cursor"],
+      x,
+      y
+    )
 
-    this.uiRenderer.addElement(cursorElement)
+    this.entityManager.addComponent(entity, uiRendererComponent)
   }
 
   private addUIGrid() {
@@ -125,13 +180,15 @@ export class EditorLayer implements Layer {
     const maxRows = Math.floor(height / EditorLayer.GRID_GAP)
     for (let i = 1; i <= maxColumns; i++) {
       for (let j = 1; j <= maxRows; j++) {
-        const uiElement = this.uiRenderer
-          .getElementBuilder()
-          .withClass("grid-point")
-          .withX(i * EditorLayer.GRID_GAP)
-          .withY(j * EditorLayer.GRID_GAP)
-          .build()
-        this.uiRenderer.addElement(uiElement)
+        const uiEntity = this.entityManager.createEntity()
+        const uiRendererComponent = new UIRendererComponent(
+          "div",
+          `grid-point-${i}-${j}`,
+          ["grid-point"],
+          i * EditorLayer.GRID_GAP,
+          j * EditorLayer.GRID_GAP
+        )
+        this.entityManager.addComponent(uiEntity, uiRendererComponent)
       }
     }
   }
@@ -163,6 +220,7 @@ export namespace ViEditor {
   }
 }
 
+// TODO: Remove this
 class EntityIDManager {
   private entityIDCounter = 1
 

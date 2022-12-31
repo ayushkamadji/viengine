@@ -1,9 +1,9 @@
 import { Event } from "../../lib/event"
 import { AbstractContext } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
-import { UI } from "../editor"
 import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
+import { EditorService } from "../editor"
 
 // TODO: move to json, and figure out how to load
 const keybindsJson = {
@@ -21,15 +21,13 @@ export class RootContext extends AbstractContext {
   private readonly nodeCreationContext: NodeCreationContext
 
   constructor(
-    private readonly ui: UI,
-    private readonly editorService,
+    private readonly editorService: EditorService,
     contextNavigator: ContextNavigator,
     name = "root"
   ) {
     super(contextNavigator)
     this.name = name
     this.nodeCreationContext = new NodeCreationContext(
-      ui,
       editorService,
       contextNavigator,
       "nodeCreation"
@@ -69,7 +67,11 @@ export class RootContext extends AbstractContext {
   }
 
   private moveCursor(deltaX: number, deltaY: number): void {
-    const { col: currentCol, row: currentRow } = this.ui.cursor
-    this.ui.setCursorPosition(currentCol + deltaX, currentRow + deltaY)
+    const { col: currentCol, row: currentRow } =
+      this.editorService.getCursorPosition()
+    this.editorService.setCursorPosition(
+      currentCol + deltaX,
+      currentRow + deltaY
+    )
   }
 }

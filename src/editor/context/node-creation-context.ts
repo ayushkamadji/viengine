@@ -1,7 +1,7 @@
 import { Event } from "../../lib/event"
 import { AbstractContext, Context } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
-import { UI, ViEditor, EditorLayer } from "../editor"
+import { ViEditor, EditorService, Util } from "../editor"
 import { Command, CommandContext } from "./command-decorator"
 
 //TODO: move to json
@@ -18,8 +18,7 @@ export class NodeCreationContext extends AbstractContext {
   private exitContext: Context = { name: "nullContext", onEvent: () => {} }
 
   constructor(
-    private readonly ui: UI,
-    private readonly editorService,
+    private readonly editorService: EditorService,
     contextNavigator: ContextNavigator,
     name: string
   ) {
@@ -40,14 +39,10 @@ export class NodeCreationContext extends AbstractContext {
 
   @Command("createNode")
   private createNode(): void {
+    const { col, row } = this.editorService.getCursorPosition()
+    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
     this.editorService.document.addElement(
-      new ViEditor.Node(
-        this.editorService.generateEntityID(),
-        (this.ui.cursor.col + 1) * EditorLayer.GRID_GAP -
-          EditorLayer.RECT_SIZE / 2,
-        (this.ui.cursor.row + 1) * EditorLayer.GRID_GAP -
-          EditorLayer.RECT_SIZE / 2
-      )
+      new ViEditor.Node(this.editorService.generateEntity(), x, y)
     )
     this.exit()
   }

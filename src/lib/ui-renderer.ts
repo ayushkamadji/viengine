@@ -11,6 +11,11 @@ export class UIElementBuilder {
     return this
   }
 
+  withClasses(classNames: string[]): UIElementBuilder {
+    this.classList.push(...classNames)
+    return this
+  }
+
   withX(x: number): UIElementBuilder {
     this.xPos = x
 
