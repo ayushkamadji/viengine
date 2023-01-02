@@ -42,9 +42,6 @@ export class NodeCreationContext extends AbstractContext {
     this.editorService.addElementAtCursor(
       new ViEditor.Node(this.editorService.generateEntity())
     )
-    // this.editorService.document.addElement(
-    //   new ViEditor.Node(this.editorService.generateEntity(), x, y)
-    // )
     this.exit()
   }
 }
