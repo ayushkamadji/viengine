@@ -10,6 +10,8 @@ import {
   CanvasRendererSystem,
   Entity,
   EntityManager,
+  StaticUIRendererComponent,
+  StaticUIRendererSystem,
   UIRendererComponent,
   UIRendererSystem,
 } from "./ecs/entity-component-system"
@@ -81,6 +83,23 @@ export class EditorService {
   private getCursorXY() {
     return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
   }
+
+  addUIAtCursor(entity: Entity) {
+    const [x, y] = this.getCursorXY()
+    const rendererComponent: UIRendererComponent = new UIRendererComponent(
+      "div",
+      "node-creation-menu",
+      ["node-creation-menu"],
+      x,
+      y
+    )
+
+    this.entityManager.addComponent(entity, rendererComponent)
+  }
+
+  removeEntity(entity: Entity) {
+    this.entityManager.removeEntity(entity)
+  }
 }
 
 export class Util {
@@ -124,6 +143,7 @@ export class EditorLayer implements Layer {
   private canvas: Canvas = new Canvas()
   private entityManager: EntityManager
   private uiRendererSystem: UIRendererSystem
+  private staticUIRendererSystem: StaticUIRendererSystem
   private canvasRendererSystem: CanvasRendererSystem
   private editorService: EditorService
 
@@ -135,6 +155,11 @@ export class EditorLayer implements Layer {
     this.entityManager = new EntityManager()
 
     this.uiRendererSystem = new UIRendererSystem(
+      this.entityManager,
+      this.uiRenderer
+    )
+
+    this.staticUIRendererSystem = new StaticUIRendererSystem(
       this.entityManager,
       this.uiRenderer
     )
@@ -162,6 +187,8 @@ export class EditorLayer implements Layer {
     this.contextNavigator.navigateTo("root")
 
     this.addUIGrid()
+    this.staticUIRendererSystem.update()
+
     this.addCursor(cursorEntity)
     this.render()
   }
@@ -205,7 +232,7 @@ export class EditorLayer implements Layer {
     for (let i = 1; i <= maxColumns; i++) {
       for (let j = 1; j <= maxRows; j++) {
         const uiEntity = this.entityManager.createEntity()
-        const uiRendererComponent = new UIRendererComponent(
+        const uiRendererComponent = new StaticUIRendererComponent(
           "div",
           `grid-point-${i}-${j}`,
           ["grid-point"],

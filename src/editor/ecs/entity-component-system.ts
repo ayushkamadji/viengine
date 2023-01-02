@@ -22,6 +22,8 @@ export class UIRendererComponent {
   ) {}
 }
 
+export class StaticUIRendererComponent extends UIRendererComponent {}
+
 export class SelectorComponent {
   //Note: Add layer id for multilayer support later
   constructor(
@@ -113,18 +115,18 @@ export interface ManagedSystem {
 }
 
 export class UIRendererSystem implements ManagedSystem {
-  static requiredComponents: ComponentClass[] = [UIRendererComponent]
+  protected requiredComponents: ComponentClass[] = [UIRendererComponent]
 
   constructor(
-    private entityManager: EntityManager,
-    private uiRenderer: UIRenderer
+    protected entityManager: EntityManager,
+    protected uiRenderer: UIRenderer
   ) {}
 
   update(): void {
     this.uiRenderer.clear()
 
     const entities = this.entityManager.getEntitiesWithComponents(
-      UIRendererSystem.requiredComponents
+      this.requiredComponents
     )
 
     for (const entity of entities) {
@@ -143,6 +145,33 @@ export class UIRendererSystem implements ManagedSystem {
     }
 
     this.uiRenderer.render()
+  }
+}
+
+export class StaticUIRendererSystem extends UIRendererSystem {
+  protected requiredComponents: ComponentClass[] = [StaticUIRendererComponent]
+
+  update(): void {
+    const entities = this.entityManager.getEntitiesWithComponents(
+      this.requiredComponents
+    )
+
+    for (const entity of entities) {
+      const container = this.entityManager.getEntityComponentContainer(entity)
+      const component: StaticUIRendererComponent = container.get(
+        StaticUIRendererComponent
+      )
+
+      const elementBuilder = this.uiRenderer
+        .getElementBuilder()
+        .withClasses(component.classes)
+        .withID(component.elementID)
+        .withX(component.x)
+        .withY(component.y)
+        .build()
+
+      this.uiRenderer.addStaticElement(elementBuilder)
+    }
   }
 }
 

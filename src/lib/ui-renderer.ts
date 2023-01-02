@@ -48,12 +48,16 @@ export class UIElementBuilder {
 
 export class UIRenderer {
   private readonly rootElement: HTMLElement
+  private readonly staticRootElement: HTMLElement
   private readonly document: Document
   private elements: HTMLElement[] = []
+  private staticElements: HTMLElement[] = []
 
   constructor(rootElement: HTMLElement, document: Document) {
     this.rootElement = rootElement
     this.rootElement.classList.add("ui")
+    this.staticRootElement = document.createElement("div")
+    this.staticRootElement.id = "static-ui"
     this.document = document
   }
 
@@ -66,10 +70,20 @@ export class UIRenderer {
     while (this.rootElement.lastChild) {
       this.rootElement.removeChild(this.rootElement.lastChild)
     }
+    this.rootElement.appendChild(this.staticRootElement)
   }
 
   addElement(element: HTMLElement) {
     this.elements.push(element)
+  }
+
+  addStaticElement(element: HTMLElement) {
+    this.staticElements.push(element)
+    this.staticRootElement.appendChild(element)
+  }
+
+  clearStaticElements() {
+    this.staticElements.length = 0
   }
 
   render() {

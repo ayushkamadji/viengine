@@ -4,6 +4,7 @@ import { ContextNavigator } from "./context-navigator"
 export interface Context {
   name: string
   onEvent(event: Event): void
+  onEntry(): void
 }
 
 export abstract class AbstractContext implements Context {
@@ -15,4 +16,12 @@ export abstract class AbstractContext implements Context {
   }
 
   abstract onEvent(event: Event): void
+
+  onEntry(): void {}
+}
+
+export const emptyContext = {
+  name: "emptyContext",
+  onEvent: () => {},
+  onEntry: () => {},
 }

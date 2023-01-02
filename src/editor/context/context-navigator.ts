@@ -1,15 +1,10 @@
-import { Context } from "./context.interface"
+import { Context, emptyContext } from "./context.interface"
 
 export class ContextNavigator {
   private contextRegistry: Map<string, Context> = new Map()
   private currentContext: Context
 
   constructor() {
-    const emptyContext: Context = {
-      name: "nullContext",
-      onEvent: () => {},
-    }
-
     this.currentContext = emptyContext
   }
 
@@ -31,6 +26,7 @@ export class ContextNavigator {
     if (context) {
       console.log(`Navigating to ${resolvedPath}`)
       this.currentContext = context
+      this.currentContext.onEntry()
     }
   }
 
