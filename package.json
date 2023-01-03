@@ -20,6 +20,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.5",
     "@babel/plugin-proposal-decorators": "^7.20.7",
+    "@babel/plugin-transform-react-jsx": "^7.20.7",
     "@babel/plugin-transform-runtime": "^7.19.6",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-react": "^7.18.6",
@@ -72,6 +73,8 @@
     ]
   },
   "dependencies": {
+    "@vijsx/jsx-runtime": "link:src\\lib\\vi-jsx",
     "d3-polygon": "^3.0.1"
-  }
+  },
+  "browser": {}
 }

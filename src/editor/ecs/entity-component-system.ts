@@ -1,28 +1,10 @@
-import { CanvasRenderer } from "../../lib/canvas-renderer"
-import { UIRenderer } from "../../lib/ui-renderer"
+import {
+  CanvasRendererComponent,
+  StaticUIRendererComponent,
+  UIRendererComponent,
+} from "../ecs-systems/render-system"
 
 export type Entity = number
-
-export class CanvasRendererComponent {
-  constructor(
-    public elementName: string,
-    public elementID: string,
-    public classes: string[],
-    public attributes: Map<string, string | number>
-  ) {}
-}
-
-export class UIRendererComponent {
-  constructor(
-    public elementName: string,
-    public elementID: string,
-    public classes: string[],
-    public x: number,
-    public y: number
-  ) {}
-}
-
-export class StaticUIRendererComponent extends UIRendererComponent {}
 
 export class SelectorComponent {
   //Note: Add layer id for multilayer support later
@@ -35,6 +17,7 @@ export class SelectorComponent {
 export type Component =
   | CanvasRendererComponent
   | UIRendererComponent
+  | StaticUIRendererComponent
   | SelectorComponent
 
 export type ComponentClass = { new (...args: any[]): Component }
@@ -61,6 +44,14 @@ export class ComponentContainer {
       }
     }
     return true
+  }
+
+  keys(): string[] {
+    const keys: string[] = []
+    for (const key in this.map.keys()) {
+      keys.push(key)
+    }
+    return keys
   }
 
   delete(componentClass: ComponentClass): void {
@@ -112,100 +103,4 @@ export class EntityManager {
 
 export interface ManagedSystem {
   update(): void
-}
-
-export class UIRendererSystem implements ManagedSystem {
-  protected requiredComponents: ComponentClass[] = [UIRendererComponent]
-
-  constructor(
-    protected entityManager: EntityManager,
-    protected uiRenderer: UIRenderer
-  ) {}
-
-  update(): void {
-    this.uiRenderer.clear()
-
-    const entities = this.entityManager.getEntitiesWithComponents(
-      this.requiredComponents
-    )
-
-    for (const entity of entities) {
-      const container = this.entityManager.getEntityComponentContainer(entity)
-      const component: UIRendererComponent = container.get(UIRendererComponent)
-
-      const elementBuilder = this.uiRenderer
-        .getElementBuilder()
-        .withClasses(component.classes)
-        .withID(component.elementID)
-        .withX(component.x)
-        .withY(component.y)
-        .build()
-
-      this.uiRenderer.addElement(elementBuilder)
-    }
-
-    this.uiRenderer.render()
-  }
-}
-
-export class StaticUIRendererSystem extends UIRendererSystem {
-  protected requiredComponents: ComponentClass[] = [StaticUIRendererComponent]
-
-  update(): void {
-    const entities = this.entityManager.getEntitiesWithComponents(
-      this.requiredComponents
-    )
-
-    for (const entity of entities) {
-      const container = this.entityManager.getEntityComponentContainer(entity)
-      const component: StaticUIRendererComponent = container.get(
-        StaticUIRendererComponent
-      )
-
-      const elementBuilder = this.uiRenderer
-        .getElementBuilder()
-        .withClasses(component.classes)
-        .withID(component.elementID)
-        .withX(component.x)
-        .withY(component.y)
-        .build()
-
-      this.uiRenderer.addStaticElement(elementBuilder)
-    }
-  }
-}
-
-export class CanvasRendererSystem implements ManagedSystem {
-  static requiredComponents: ComponentClass[] = [CanvasRendererComponent]
-
-  constructor(
-    private entityManager: EntityManager,
-    private canvasRenderer: CanvasRenderer
-  ) {}
-
-  update(): void {
-    this.canvasRenderer.clear()
-
-    const entities = this.entityManager.getEntitiesWithComponents(
-      CanvasRendererSystem.requiredComponents
-    )
-
-    for (const entity of entities) {
-      const container = this.entityManager.getEntityComponentContainer(entity)
-      const component: CanvasRendererComponent = container.get(
-        CanvasRendererComponent
-      )
-
-      const elementBuilder = this.canvasRenderer
-        .getElementBuilder()
-        .withElementName(component.elementName)
-        .withID(component.elementID)
-        .withAttributes(component.attributes)
-        .build()
-
-      this.canvasRenderer.addElement(elementBuilder)
-    }
-
-    this.canvasRenderer.render()
-  }
 }

@@ -5,16 +5,18 @@ import { UIRenderer } from "../lib/ui-renderer"
 import { ContextNavigator } from "./context/context-navigator"
 import "./editor.css"
 import { RootContext } from "./context/root-context"
+import { Entity, EntityManager } from "./ecs/entity-component-system"
 import {
   CanvasRendererComponent,
   CanvasRendererSystem,
-  Entity,
-  EntityManager,
-  StaticUIRendererComponent,
   StaticUIRendererSystem,
   UIRendererComponent,
   UIRendererSystem,
-} from "./ecs/entity-component-system"
+} from "./ecs-systems/render-system"
+import {
+  CursorComponentFactory,
+  GridPointComponentFactory,
+} from "./editor-components"
 
 export class EditorService {
   constructor(
@@ -84,16 +86,12 @@ export class EditorService {
     return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
   }
 
-  addUIAtCursor(entity: Entity) {
+  addUIAtCursor(
+    entity: Entity,
+    componentFn: (x: number, y: number) => UIRendererComponent
+  ) {
     const [x, y] = this.getCursorXY()
-    const rendererComponent: UIRendererComponent = new UIRendererComponent(
-      "div",
-      "node-creation-menu",
-      ["node-creation-menu"],
-      x,
-      y
-    )
-
+    const rendererComponent: UIRendererComponent = componentFn(x, y)
     this.entityManager.addComponent(entity, rendererComponent)
   }
 
@@ -213,15 +211,7 @@ export class EditorLayer implements Layer {
 
   private addCursor(entity: Entity) {
     const { col, row } = this.ui.cursor
-    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
-    const uiRendererComponent = new UIRendererComponent(
-      "div",
-      "ui-cursor",
-      ["ui-cursor"],
-      x,
-      y
-    )
-
+    const uiRendererComponent = CursorComponentFactory.create(row, col)
     this.entityManager.addComponent(entity, uiRendererComponent)
   }
 
@@ -232,13 +222,7 @@ export class EditorLayer implements Layer {
     for (let i = 1; i <= maxColumns; i++) {
       for (let j = 1; j <= maxRows; j++) {
         const uiEntity = this.entityManager.createEntity()
-        const uiRendererComponent = new StaticUIRendererComponent(
-          "div",
-          `grid-point-${i}-${j}`,
-          ["grid-point"],
-          i * EditorLayer.GRID_GAP,
-          j * EditorLayer.GRID_GAP
-        )
+        const uiRendererComponent = GridPointComponentFactory.create(i, j)
         this.entityManager.addComponent(uiEntity, uiRendererComponent)
       }
     }

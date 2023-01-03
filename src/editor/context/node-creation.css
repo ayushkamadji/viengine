@@ -1,0 +1,10 @@
+.node-create-menu {
+  position: absolute;
+  color: white;
+  width: 100px;
+}
+
+.node-create-menu div {
+  padding: 5px;
+  background-color: #ccc8;
+}

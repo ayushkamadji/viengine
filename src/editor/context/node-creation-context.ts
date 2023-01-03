@@ -4,6 +4,7 @@ import { ContextNavigator } from "./context-navigator"
 import { ViEditor, EditorService } from "../editor"
 import { Command, CommandContext } from "./command-decorator"
 import { Entity } from "../ecs/entity-component-system"
+import { MenuComponentFactory } from "./node-creation-component"
 
 //TODO: move to json
 const keybindsJson = {
@@ -54,7 +55,11 @@ export class NodeCreationContext extends AbstractContext {
   }
 
   private createMenuUI(entity: Entity): void {
-    this.editorService.addUIAtCursor(entity)
+    const rendererComponentFactory = MenuComponentFactory.createFactory([
+      "exit",
+      "createNode",
+    ])
+    this.editorService.addUIAtCursor(entity, rendererComponentFactory)
   }
 
   private destroyMenu(): void {

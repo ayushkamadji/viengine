@@ -1,9 +1,17 @@
 export class UIElementBuilder {
   constructor(private readonly document: Document) {}
   private classList: string[] = []
-  private xPos = 0
-  private yPos = 0
+  private xPos: number | undefined
+  private yPos: number | undefined
   private id = ""
+  private children: (HTMLElement | string)[] = []
+  private tag = "div"
+
+  withTag(tag: string): UIElementBuilder {
+    this.tag = tag
+
+    return this
+  }
 
   withClass(className: string): UIElementBuilder {
     this.classList.push(className)
@@ -34,14 +42,43 @@ export class UIElementBuilder {
     return this
   }
 
-  build() {
+  withChildren(children: HTMLElement[]): UIElementBuilder {
+    this.children = children
+
+    return this
+  }
+
+  withChild(child: HTMLElement | string): UIElementBuilder {
+    this.children.push(child)
+
+    return this
+  }
+
+  build(): HTMLElement {
     const element = this.document.createElement("div")
-    element.classList.add(...this.classList)
-    element.style.left = `${this.xPos}px`
-    element.style.top = `${this.yPos}px`
+
+    if (this.classList.length > 0) {
+      element.classList.add(...this.classList)
+    }
+
+    if (this.xPos !== undefined && this.yPos) {
+      element.style.left = `${this.xPos}px`
+      element.style.top = `${this.yPos}px`
+    }
+
     if (this.id) {
       element.id = this.id
     }
+
+    this.children.forEach((child) => {
+      if (typeof child === "string") {
+        const textNode = this.document.createTextNode(child)
+        element.appendChild(textNode)
+      } else {
+        element.appendChild(child)
+      }
+    })
+
     return element
   }
 }
