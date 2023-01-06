@@ -1,7 +1,8 @@
 import { Event } from "../../lib/event"
 import { AbstractContext, Context, emptyContext } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
-import { ViEditor, EditorService } from "../editor"
+import { ViEditor } from "../editor"
+import { EditorService } from "../editor-service"
 import { Command, CommandContext } from "./command-decorator"
 import { Entity } from "../ecs/entity-component-system"
 import { Menu } from "./node-creation-component"
@@ -9,7 +10,8 @@ import { Menu } from "./node-creation-component"
 //TODO: move to json
 const keybindsJson = {
   Escape: "exit",
-  Enter: "createNode",
+  Enter: "createTextBox",
+  // q: "createTextBox",
 }
 
 const keybinds = Object.entries(keybindsJson)
@@ -51,6 +53,14 @@ export class NodeCreationContext extends AbstractContext {
   private createNode(): void {
     this.editorService.addElementAtCursor(
       new ViEditor.Node(this.editorService.generateEntity())
+    )
+    this.exit()
+  }
+
+  @Command("createTextBox")
+  private createTextBox(text = "hello world"): void {
+    this.editorService.addElementAtCursor(
+      new ViEditor.TextBoxNode(this.editorService.generateEntity(), text)
     )
     this.exit()
   }

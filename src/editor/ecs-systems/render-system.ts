@@ -1,4 +1,4 @@
-import { CanvasRenderer } from "../../lib/canvas-renderer"
+import { CanvasElementBuilder, CanvasRenderer } from "../../lib/canvas-renderer"
 import { UIElementBuilder, UIRenderer } from "../../lib/ui-renderer"
 import {
   ComponentClass,
@@ -22,7 +22,7 @@ export type RendererComponentElement = {
 
 const excludedAttributes = ["id", "className", "data-x", "data-y", "children"]
 
-export class UIRendererComponent {
+export class RendererComponent {
   private _element: RendererComponentElement | undefined
 
   constructor(
@@ -44,6 +44,8 @@ export class UIRendererComponent {
     this._element = undefined
   }
 }
+
+export class UIRendererComponent extends RendererComponent {}
 
 export class UIRendererSystem implements ManagedSystem {
   protected requiredComponents: ComponentClass[] = [UIRendererComponent]
@@ -80,14 +82,7 @@ export class UIRendererSystem implements ManagedSystem {
       .withY(component.element.y)
 
     if (component.element.attributes) {
-      // TODO: to use for of without object entries we will need to specify
-      // attribute as Map in vijsx which requires we transpile it in monorepo mode
-      // (this will be done in the future [feat(vijsx-ts)], not atm)
-      for (const [key, value] of Object.entries(component.element.attributes)) {
-        if (!excludedAttributes.includes(key)) {
-          elementBuilder.withAttribute(key, value)
-        }
-      }
+      this.addAttributes(elementBuilder, component.element.attributes)
     }
 
     if (component.element.children) {
@@ -95,6 +90,20 @@ export class UIRendererSystem implements ManagedSystem {
     }
 
     return elementBuilder.build()
+  }
+
+  protected addAttributes(
+    elementBuilder: UIElementBuilder,
+    attributes: Map<string, string | number>
+  ) {
+    // TODO: to use for of without object entries we will need to specify
+    // attribute as Map in vijsx which requires we transpile it in monorepo mode
+    // (this will be done in the future [feat(vijsx-ts)], not atm)
+    for (const [key, value] of Object.entries(attributes)) {
+      if (!excludedAttributes.includes(key)) {
+        elementBuilder.withAttribute(key, value)
+      }
+    }
   }
 
   protected buildElementChildren(
@@ -143,14 +152,7 @@ export class StaticUIRendererSystem extends UIRendererSystem {
   }
 }
 
-export class CanvasRendererComponent {
-  constructor(
-    public elementName: string,
-    public elementID: string,
-    public classes: string[],
-    public attributes: Map<string, string | number>
-  ) {}
-}
+export class CanvasRendererComponent extends RendererComponent {}
 
 export class CanvasRendererSystem implements ManagedSystem {
   static requiredComponents: ComponentClass[] = [CanvasRendererComponent]
@@ -173,16 +175,67 @@ export class CanvasRendererSystem implements ManagedSystem {
         CanvasRendererComponent
       )
 
-      const elementBuilder = this.canvasRenderer
-        .getElementBuilder()
-        .withElementName(component.elementName)
-        .withID(component.elementID)
-        .withAttributes(component.attributes)
-        .build()
+      const elementBuilder = this.buildElement(component)
 
-      this.canvasRenderer.addElement(elementBuilder)
+      this.canvasRenderer.addElement(elementBuilder.build())
     }
 
     this.canvasRenderer.render()
+  }
+
+  private buildElement(component: CanvasRendererComponent) {
+    const elementBuilder = this.canvasRenderer
+      .getElementBuilder()
+      .withElementName(component.element.name)
+      .withID(component.element.id)
+      .withClasses(component.element.classes)
+
+    if (component.element.attributes) {
+      this.addAttributes(elementBuilder, component.element.attributes)
+    }
+
+    if (component.element.children) {
+      this.buildElementChildren(elementBuilder, component.element.children)
+    }
+
+    return elementBuilder
+  }
+
+  private addAttributes(
+    elementBuilder: CanvasElementBuilder,
+    attributes: Map<string, string | number>
+  ) {
+    for (const [key, value] of Object.entries(attributes)) {
+      if (!excludedAttributes.includes(key)) {
+        elementBuilder.withAttribute(key, value)
+      }
+    }
+  }
+
+  private buildElementChildren(
+    parentBuilder: CanvasElementBuilder,
+    children: (RendererComponentElement | string)[]
+  ) {
+    for (const child of children) {
+      if (typeof child === "string") {
+        parentBuilder.withChild(child)
+      } else {
+        const childBuilder = this.canvasRenderer
+          .getElementBuilder()
+          .withElementName(child.name)
+          .withID(child.id)
+          .withClasses(child.classes)
+
+        if (child.attributes) {
+          this.addAttributes(childBuilder, child.attributes)
+        }
+
+        if (child.children) {
+          this.buildElementChildren(childBuilder, child.children)
+        }
+
+        parentBuilder.withChild(childBuilder.build())
+      }
+    }
   }
 }

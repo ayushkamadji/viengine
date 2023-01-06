@@ -5,6 +5,7 @@ export class CanvasElementBuilder {
   private id = ""
   private classList: string[] = []
   private attributes: Map<string, string | number> = new Map()
+  private children: (SVGElement | string)[] = []
 
   constructor(private readonly document: Document) {}
 
@@ -26,6 +27,12 @@ export class CanvasElementBuilder {
     return this
   }
 
+  withClasses(classNames: string[]): CanvasElementBuilder {
+    this.classList.push(...classNames)
+
+    return this
+  }
+
   withAttribute(name: string, value: string | number): CanvasElementBuilder {
     this.attributes.set(name, value)
 
@@ -42,6 +49,12 @@ export class CanvasElementBuilder {
     return this
   }
 
+  withChild(child: SVGElement | string): CanvasElementBuilder {
+    this.children.push(child)
+
+    return this
+  }
+
   build(): SVGElement {
     const elementNS = this.document.createElementNS(
       SVG_NAMESPACE_URL,
@@ -54,6 +67,14 @@ export class CanvasElementBuilder {
 
     for (const [key, value] of this.attributes) {
       elementNS.setAttributeNS(null, key, value.toString())
+    }
+
+    for (const child of this.children) {
+      if (typeof child === "string") {
+        elementNS.appendChild(this.document.createTextNode(child))
+      } else {
+        elementNS.appendChild(child)
+      }
     }
 
     return elementNS

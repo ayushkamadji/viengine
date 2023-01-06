@@ -1,6 +1,11 @@
+import { SVGProps } from "react"
 import { RendererComponentElement } from "./render-system"
 
 export type ElementFunction = (...args: any[]) => JSX.Element
+
+export type SVGElementFunction<T extends SVGElement> = (
+  props: SVGProps<T>
+) => JSX.Element
 
 export type BaseUIPropType = {
   x: number

@@ -7,117 +7,16 @@ import "./editor.css"
 import { RootContext } from "./context/root-context"
 import { Entity, EntityManager } from "./ecs/entity-component-system"
 import {
-  CanvasRendererComponent,
   CanvasRendererSystem,
   StaticUIRendererComponent,
   StaticUIRendererSystem,
   UIRendererComponent,
   UIRendererSystem,
 } from "./ecs-systems/render-system"
-import { Cursor, GridPoint } from "./editor-components"
+import { Cursor, GridPoint, SVGNode, TextBox } from "./editor-components"
 import { ElementFunction } from "./ecs-systems/renderer-element"
-
-export class EditorService {
-  constructor(
-    readonly document: ViEditor.Document,
-    private readonly entityManager: EntityManager,
-    private readonly cursorEntity: Entity,
-    private readonly ui: UI,
-    private readonly canvas: Canvas
-  ) {}
-
-  generateEntity(): number {
-    return this.entityManager.createEntity()
-  }
-
-  getCursorEntity(): Entity {
-    return this.cursorEntity
-  }
-
-  setCursorPosition(col: number, row: number) {
-    this.ui.setCursorPosition(col, row)
-    const rendererComponent: UIRendererComponent =
-      this.getCursorEntityComponentContainer()
-
-    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
-    rendererComponent.setProps({ x, y })
-  }
-
-  getCursorPosition(): { col: number; row: number } {
-    return this.ui.cursor
-  }
-
-  addElementAtCursor(element: ViEditor.Element) {
-    this.canvas.document.addElement(element)
-
-    if (element instanceof ViEditor.Node) {
-      const entity: Entity = element.entityID
-
-      const [x, y] = this.getCursorXY()
-      element.x = x
-      element.y = y
-
-      const attributes: Map<string, string | number> = new Map<
-        string,
-        string | number
-      >([
-        ["x", element.x],
-        ["y", element.y],
-        ["width", EditorLayer.RECT_SIZE],
-        ["height", EditorLayer.RECT_SIZE],
-        ["stroke", "white"],
-      ])
-
-      const canvasRendererComponent: CanvasRendererComponent =
-        new CanvasRendererComponent(
-          "rect",
-          element.entityID.toString(),
-          [],
-          attributes
-        )
-
-      this.entityManager.addComponent(entity, canvasRendererComponent)
-    }
-  }
-
-  private getCursorXY() {
-    return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
-  }
-
-  addUIAtCursor(entity: Entity, elementFunction: ElementFunction, props: any) {
-    const [x, y] = this.getCursorXY()
-    const rendererComponent = new UIRendererComponent(elementFunction, {
-      x,
-      y,
-      ...props,
-    })
-    this.entityManager.addComponent(entity, rendererComponent)
-  }
-
-  removeEntity(entity: Entity) {
-    this.entityManager.removeEntity(entity)
-  }
-
-  hideMainCursor() {
-    const rendererComponent: UIRendererComponent =
-      this.getCursorEntityComponentContainer()
-
-    rendererComponent.setProps({ hidden: "hidden" })
-  }
-
-  showMainCursor() {
-    const rendererComponent: UIRendererComponent =
-      this.getCursorEntityComponentContainer()
-
-    rendererComponent.setProps({ hidden: "" })
-  }
-
-  private getCursorEntityComponentContainer(): UIRendererComponent {
-    return this.entityManager
-      .getEntityComponentContainer(this.cursorEntity)
-      .get(UIRendererComponent)
-  }
-}
+import { EditorService } from "./editor-service"
+import { SVGProps } from "react"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -267,16 +166,81 @@ export namespace ViEditor {
     children?: Element[]
   }
 
-  export class Node implements Element {
+  export type StemElement = Element & {
+    readonly jsxElementFunction?: ElementFunction
+    props: any
+    setPosition(x: number, y: number): void
+  }
+
+  export class Node implements StemElement {
+    static _jsxElementFunction = SVGNode
     name = "node"
     text = ""
+    props: SVGProps<SVGRectElement> = {
+      x: 0,
+      y: 0,
+      width: EditorLayer.RECT_SIZE,
+      height: EditorLayer.RECT_SIZE,
+      stroke: "white",
+    }
 
-    constructor(
-      public entityID: number,
-      public x: number = 0,
-      public y: number = 0
-    ) {
+    constructor(public entityID: number) {
       this.text = entityID.toString()
+    }
+    children?: Element[] | undefined
+
+    setPosition(x: number, y: number): void {
+      this.props.x = x
+      this.props.y = y
+    }
+
+    get jsxElementFunction() {
+      return Node._jsxElementFunction
+    }
+  }
+
+  export class TextBoxNode implements StemElement {
+    static _jsxElementFunction = TextBox
+    name = "text-box-node"
+    props = {
+      x: 0,
+      y: 0,
+      transform: "",
+      width: 280,
+      height: 100,
+      text: "",
+      rectProps: {
+        x: 0,
+        y: 0,
+        width: 220,
+        height: 100,
+        stroke: "white",
+      },
+      textProps: {
+        x: 110,
+        y: 50,
+        fill: "white",
+        "alignment-baseline": "middle",
+        "text-anchor": "middle",
+      },
+    }
+
+    constructor(public entityID: number, text: string) {
+      this.props.text = text
+    }
+
+    get jsxElementFunction() {
+      return TextBoxNode._jsxElementFunction
+    }
+
+    setPosition(x: number, y: number) {
+      this.props.transform = `translate(${x}, ${y})`
+      // this.props.x = x
+      // this.props.rectProps.x = x
+      // this.props.textProps.x = x
+      // this.props.y = y
+      // this.props.rectProps.y = y
+      // this.props.textProps.y = y
     }
   }
 

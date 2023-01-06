@@ -3,7 +3,7 @@ import { AbstractContext } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
 import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
-import { EditorService } from "../editor"
+import { EditorService } from "../editor-service"
 
 // TODO: move to json, and figure out how to load
 const keybindsJson = {
