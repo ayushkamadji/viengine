@@ -41,6 +41,14 @@ export class RootContext extends AbstractContext {
 
   onEvent(_event: Event): void {}
 
+  onExit(): void {
+    this.editorService.hideMainCursor()
+  }
+
+  onEntry(): void {
+    this.editorService.showMainCursor()
+  }
+
   @Command("navToCreateNode")
   private navigateToNodeCreationContext(): void {
     this.getNavigator().navigateTo(`${"root"}.nodeCreation`)

@@ -22,6 +22,10 @@
   animation: blink 1s steps(2, jump-none) infinite;
 }
 
+.hidden {
+  display: none;
+}
+
 @keyframes blink {
   0% {
     opacity: 1;

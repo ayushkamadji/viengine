@@ -1,9 +1,20 @@
 const jsxFragment = "jsx.Fragment"
 const jsxTextNode = "jsx.Text"
 
+// type TargetProps = {
+//   name: string
+//   id: string
+//   x: number
+//   y: number
+//   attributes: Map<string, string | number>
+//   classes: string[]
+//   children?: (TargetProps | string)[]
+// }
+
 function jsx(tag, props) {
   if (typeof tag === "function") return tag(props)
-  const component = {
+  // const targetProps: TargetProps = {
+  const targetProps = {
     name: tag,
     id: props.id,
     x: props["data-x"],
@@ -13,12 +24,12 @@ function jsx(tag, props) {
   }
 
   if (props.children) {
-    component.children = props.children
+    targetProps.children = props.children
   }
 
   return {
     type: tag,
-    props: component,
+    props: targetProps,
     key: null,
   }
 }

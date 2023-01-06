@@ -9,14 +9,13 @@ import { Entity, EntityManager } from "./ecs/entity-component-system"
 import {
   CanvasRendererComponent,
   CanvasRendererSystem,
+  StaticUIRendererComponent,
   StaticUIRendererSystem,
   UIRendererComponent,
   UIRendererSystem,
 } from "./ecs-systems/render-system"
-import {
-  CursorComponentFactory,
-  GridPointComponentFactory,
-} from "./editor-components"
+import { Cursor, GridPoint } from "./editor-components"
+import { ElementFunction } from "./ecs-systems/renderer-element"
 
 export class EditorService {
   constructor(
@@ -37,12 +36,11 @@ export class EditorService {
 
   setCursorPosition(col: number, row: number) {
     this.ui.setCursorPosition(col, row)
-    const rendererComponent: UIRendererComponent = this.entityManager
-      .getEntityComponentContainer(this.cursorEntity)
-      .get(UIRendererComponent)
+    const rendererComponent: UIRendererComponent =
+      this.getCursorEntityComponentContainer()
+
     const [x, y] = Util.cursorColRowToCanvasXY(col, row)
-    rendererComponent.x = x
-    rendererComponent.y = y
+    rendererComponent.setProps({ x, y })
   }
 
   getCursorPosition(): { col: number; row: number } {
@@ -86,17 +84,38 @@ export class EditorService {
     return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
   }
 
-  addUIAtCursor(
-    entity: Entity,
-    componentFn: (x: number, y: number) => UIRendererComponent
-  ) {
+  addUIAtCursor(entity: Entity, elementFunction: ElementFunction, props: any) {
     const [x, y] = this.getCursorXY()
-    const rendererComponent: UIRendererComponent = componentFn(x, y)
+    const rendererComponent = new UIRendererComponent(elementFunction, {
+      x,
+      y,
+      ...props,
+    })
     this.entityManager.addComponent(entity, rendererComponent)
   }
 
   removeEntity(entity: Entity) {
     this.entityManager.removeEntity(entity)
+  }
+
+  hideMainCursor() {
+    const rendererComponent: UIRendererComponent =
+      this.getCursorEntityComponentContainer()
+
+    rendererComponent.setProps({ hidden: "hidden" })
+  }
+
+  showMainCursor() {
+    const rendererComponent: UIRendererComponent =
+      this.getCursorEntityComponentContainer()
+
+    rendererComponent.setProps({ hidden: "" })
+  }
+
+  private getCursorEntityComponentContainer(): UIRendererComponent {
+    return this.entityManager
+      .getEntityComponentContainer(this.cursorEntity)
+      .get(UIRendererComponent)
   }
 }
 
@@ -177,18 +196,18 @@ export class EditorLayer implements Layer {
       this.canvas
     )
 
+    this.addUIGrid()
+    this.staticUIRendererSystem.update()
+
+    this.addCursor(cursorEntity)
+    this.render()
+
     const rootContext = new RootContext(
       this.editorService,
       this.contextNavigator
     )
     this.contextNavigator.registerContext("root", rootContext)
     this.contextNavigator.navigateTo("root")
-
-    this.addUIGrid()
-    this.staticUIRendererSystem.update()
-
-    this.addCursor(cursorEntity)
-    this.render()
   }
 
   onEvent(event: Event): void {
@@ -211,7 +230,12 @@ export class EditorLayer implements Layer {
 
   private addCursor(entity: Entity) {
     const { col, row } = this.ui.cursor
-    const uiRendererComponent = CursorComponentFactory.create(row, col)
+    const [x, y] = Util.cursorColRowToCanvasXY(col, row)
+    const uiRendererComponent = new UIRendererComponent(Cursor, {
+      x,
+      y,
+      hidden: false,
+    })
     this.entityManager.addComponent(entity, uiRendererComponent)
   }
 
@@ -221,8 +245,15 @@ export class EditorLayer implements Layer {
     const maxRows = Math.floor(height / EditorLayer.GRID_GAP)
     for (let i = 1; i <= maxColumns; i++) {
       for (let j = 1; j <= maxRows; j++) {
+        const x = i * EditorLayer.GRID_GAP
+        const y = j * EditorLayer.GRID_GAP
+        const index = (i - 1) * maxRows + j
         const uiEntity = this.entityManager.createEntity()
-        const uiRendererComponent = GridPointComponentFactory.create(i, j)
+        const uiRendererComponent = new StaticUIRendererComponent(GridPoint, {
+          x,
+          y,
+          index,
+        })
         this.entityManager.addComponent(uiEntity, uiRendererComponent)
       }
     }

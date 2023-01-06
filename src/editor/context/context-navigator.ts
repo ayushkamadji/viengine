@@ -25,6 +25,7 @@ export class ContextNavigator {
 
     if (context) {
       console.log(`Navigating to ${resolvedPath}`)
+      this.currentContext.onExit()
       this.currentContext = context
       this.currentContext.onEntry()
     }

@@ -1,5 +1,6 @@
 {
   "name": "@vijsx/jsx-runtime",
   "main": "jsx-runtime.js",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "scripts": {}
 }

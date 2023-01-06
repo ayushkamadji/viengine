@@ -5,6 +5,7 @@ export interface Context {
   name: string
   onEvent(event: Event): void
   onEntry(): void
+  onExit(): void
 }
 
 export abstract class AbstractContext implements Context {
@@ -18,10 +19,12 @@ export abstract class AbstractContext implements Context {
   abstract onEvent(event: Event): void
 
   onEntry(): void {}
+  onExit(): void {}
 }
 
 export const emptyContext = {
   name: "emptyContext",
   onEvent: () => {},
   onEntry: () => {},
+  onExit: () => {},
 }

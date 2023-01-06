@@ -6,6 +6,7 @@ export class UIElementBuilder {
   private id = ""
   private children: (HTMLElement | string)[] = []
   private tag = "div"
+  private attributes: Map<string, string | number> = new Map()
 
   withTag(tag: string): UIElementBuilder {
     this.tag = tag
@@ -54,6 +55,12 @@ export class UIElementBuilder {
     return this
   }
 
+  withAttribute(key: string, value: string | number) {
+    this.attributes.set(key, value)
+
+    return this
+  }
+
   build(): HTMLElement {
     const element = this.document.createElement("div")
 
@@ -68,6 +75,14 @@ export class UIElementBuilder {
 
     if (this.id) {
       element.id = this.id
+    }
+
+    if (this.attributes.size > 0) {
+      for (const [key, value] of this.attributes) {
+        if (value && value.toString instanceof Function) {
+          element.setAttribute(key, value.toString())
+        }
+      }
     }
 
     this.children.forEach((child) => {
