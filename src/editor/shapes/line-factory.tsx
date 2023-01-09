@@ -1,0 +1,181 @@
+import { Command, CommandContext } from "../context/command-decorator"
+import { ContextNavigator } from "../context/context-navigator"
+import { AbstractContext } from "../context/context.interface"
+import { ElementFunction } from "../ecs-systems/renderer-element"
+import { EditorService } from "../editor-service"
+import { Point, StemElement } from "../vieditor-element"
+import { ShapeFactory } from "./shape-factory"
+
+export const Line: ElementFunction = ({ gProps, lineProps }) => {
+  return (
+    <g {...gProps}>
+      <defs>
+        <marker
+          id="arrowhead"
+          markerWidth="10"
+          markerHeight="7"
+          refX="0"
+          refY="3.5"
+          orient="auto"
+        >
+          <polygon points="0 0, 10 3.5, 0 7" fill={lineProps.stroke} />
+        </marker>
+      </defs>
+      <line {...lineProps}></line>
+    </g>
+  )
+}
+
+type LineProps = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  "stroke-width": number
+  stroke: string
+  "marker-end"?: string
+}
+
+export class LineNode implements StemElement {
+  static _jsxElementFunction = Line
+  name: string
+  props: { gProps: any; lineProps: LineProps } = {
+    gProps: {
+      transform: "translate(0, 0)",
+    },
+    lineProps: {
+      x1: 0,
+      y1: 0,
+      x2: 40,
+      y2: 40,
+      "stroke-width": 2,
+      stroke: "white",
+      "marker-end": "url(#arrowhead)",
+    },
+  }
+  position: Point = { x: 0, y: 0 }
+
+  constructor(public entityID: number) {
+    this.name = "line-node"
+  }
+
+  get jsxElementFunction() {
+    return LineNode._jsxElementFunction
+  }
+
+  setPosition(x: number, y: number): void {
+    this.props.gProps.transform = `translate(${x}, ${y})`
+    this.position = { x, y }
+  }
+}
+
+export class LineNodeFactory implements ShapeFactory {
+  editorElement = LineNode
+  name = "line-node-factory"
+
+  constructor(
+    private readonly editorService: EditorService,
+    private readonly contextNavigator: ContextNavigator
+  ) {}
+
+  create(): void {
+    const entity = this.editorService.generateEntity()
+    const docElement = new this.editorElement(entity)
+
+    this.editorService.addElementAtCursor(docElement)
+
+    const editContext = new LineEditContext(
+      this.editorService,
+      this.contextNavigator,
+      docElement,
+      `root/document/${entity}/edit`
+    )
+    this.contextNavigator.registerContext(editContext.name, editContext)
+    this.contextNavigator.navigateTo(`root/document/${entity}/edit`)
+  }
+}
+
+@CommandContext({
+  keybinds: [
+    ["h", "moveP2left"],
+    ["j", "moveP2down"],
+    ["k", "moveP2up"],
+    ["l", "moveP2right"],
+    ["e", "toggleEndMarker"],
+    ["Escape", "cancel"],
+    ["Enter", "exit"],
+  ],
+})
+export class LineEditContext extends AbstractContext {
+  static MOVE_STEP = 10
+  constructor(
+    private readonly editorService: EditorService,
+    private readonly contextNavigator: ContextNavigator,
+    private readonly line: LineNode,
+    public name: string
+  ) {
+    super(contextNavigator)
+  }
+
+  @Command("moveP2up")
+  private moveP2up(): void {
+    const nextY2 = this.line.props.lineProps.y2 - LineEditContext.MOVE_STEP
+    this.updateLineProps({ y2: nextY2 })
+  }
+
+  @Command("moveP2down")
+  private moveP2down(): void {
+    const nextY2 = this.line.props.lineProps.y2 + LineEditContext.MOVE_STEP
+    this.updateLineProps({ y2: nextY2 })
+  }
+
+  @Command("moveP2left")
+  private moveP2left(): void {
+    const nextX2 = this.line.props.lineProps.x2 - LineEditContext.MOVE_STEP
+    this.updateLineProps({ x2: nextX2 })
+  }
+
+  @Command("moveP2right")
+  private moveP2right(): void {
+    const nextX2 = this.line.props.lineProps.x2 + LineEditContext.MOVE_STEP
+    this.updateLineProps({ x2: nextX2 })
+  }
+
+  @Command("toggleEndMarker")
+  private toggleEndMarker(): void {
+    if (this.line.props.lineProps["marker-end"]) {
+      const { "marker-end": _, ...rest } = this.line.props.lineProps
+      this.setProps({ ...this.line.props, lineProps: rest })
+    } else {
+      this.updateLineProps({ "marker-end": "url(#arrowhead)" })
+    }
+  }
+
+  private updateLineProps(
+    props: Partial<LineNode["props"]["lineProps"]>
+  ): void {
+    const nextLineProps = { ...this.line.props.lineProps, ...props }
+    this.setProps({ ...this.line.props, lineProps: nextLineProps })
+  }
+
+  private setProps(props: LineNode["props"]): void {
+    this.line.props = props
+    this.editorService.setElementProps(this.line.entityID, this.line.props)
+  }
+
+  @Command("exit")
+  private exit(): void {
+    this.contextNavigator.navigateTo("root")
+  }
+
+  @Command("cancel")
+  private cancel(): void {
+    this.editorService.removeElement(this.line)
+    this.contextNavigator.removeContext(this.name)
+    this.exit()
+  }
+
+  onRemove(): void {
+    //TODO: remove any sub contexts
+  }
+}

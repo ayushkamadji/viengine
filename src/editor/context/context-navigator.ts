@@ -31,6 +31,11 @@ export class ContextNavigator {
     }
   }
 
+  removeContext(path: string): void {
+    this.currentContext.onRemove()
+    this.contextRegistry.delete(path)
+  }
+
   getCurrentContext(): Context {
     return this.currentContext
   }

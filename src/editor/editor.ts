@@ -18,6 +18,7 @@ import { EditorService } from "./editor-service"
 import { ElementFactoryRegistry } from "./shapes/shape-factory"
 import { TextBoxFactory, TextBoxNode } from "./shapes/text-box-factory"
 import { Document } from "./vieditor-element"
+import { LineNode, LineNodeFactory } from "./shapes/line-factory"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -103,6 +104,7 @@ export class EditorLayer implements Layer {
     )
 
     this.factoryRegistry.registerFactory(TextBoxNode, TextBoxFactory)
+    this.factoryRegistry.registerFactory(LineNode, LineNodeFactory)
 
     this.addUIGrid()
     this.staticUIRendererSystem.update()

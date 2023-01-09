@@ -1,5 +1,4 @@
 import { ContextNavigator } from "../context/context-navigator"
-import { TextBox } from "../editor-components"
 import { EditorService } from "../editor-service"
 import { ShapeFactory } from "./shape-factory"
 import { Command, CommandContext } from "../context/command-decorator"
@@ -9,7 +8,9 @@ import {
   emptyContext,
 } from "../context/context.interface"
 import { Event, KeyDownEvent } from "../../lib/event"
-import type { TextElement } from "../vieditor-element"
+import type { Element, Point, TextElement } from "../vieditor-element"
+import { ElementFunction } from "../ecs-systems/renderer-element"
+import { SVGProps } from "react"
 
 const printableKeys = [
   "a",
@@ -158,13 +159,32 @@ export class InsertModeContext extends AbstractContext {
   }
 }
 
+export const TextBox: ElementFunction = ({
+  rectProps,
+  textProps,
+  text,
+  ...gProps
+}: {
+  rectProps: SVGProps<SVGRectElement>
+  textProps: SVGProps<SVGTextElement>
+  text: string
+} & SVGProps<SVGGElement>) => {
+  return (
+    <g {...gProps}>
+      <rect {...rectProps}></rect>
+      <text {...textProps}>{text}</text>
+    </g>
+  )
+}
+
 export class TextBoxNode implements TextElement {
   static _jsxElementFunction = TextBox // TODO: Move this to the factory
   name = "text-box-node"
+  position: Point = { x: 0, y: 0 }
   props = {
     x: 0,
     y: 0,
-    transform: "",
+    transform: "translate(0, 0)",
     width: 280,
     height: 100,
     text: "",
@@ -187,6 +207,7 @@ export class TextBoxNode implements TextElement {
   constructor(public entityID: number, text: string) {
     this.props.text = text
   }
+  children?: Element[] | undefined
 
   get jsxElementFunction() {
     return TextBoxNode._jsxElementFunction
@@ -194,6 +215,7 @@ export class TextBoxNode implements TextElement {
 
   setPosition(x: number, y: number) {
     this.props.transform = `translate(${x}, ${y})`
+    this.position = { x, y }
   }
 
   setProps(props: any) {

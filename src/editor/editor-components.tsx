@@ -40,21 +40,3 @@ export const SVGNode: SVGElementFunction<SVGRectElement> = (
 ) => {
   return <rect {...props}></rect>
 }
-
-export const TextBox: ElementFunction = ({
-  rectProps,
-  textProps,
-  text,
-  ...gProps
-}: {
-  rectProps: SVGProps<SVGRectElement>
-  textProps: SVGProps<SVGTextElement>
-  text: string
-} & SVGProps<SVGGElement>) => {
-  return (
-    <g {...gProps}>
-      <rect {...rectProps}></rect>
-      <text {...textProps}>{text}</text>
-    </g>
-  )
-}

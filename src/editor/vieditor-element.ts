@@ -9,9 +9,12 @@ export interface Element {
   children?: Element[]
 }
 
+export type Point = { x: number; y: number; z?: number }
+
 export interface StemElement extends Element {
   readonly jsxElementFunction?: ElementFunction
   props: any
+  position: Point
   setPosition(x: number, y: number): void
 }
 
@@ -27,12 +30,14 @@ export class Node implements StemElement {
   static _jsxElementFunction = SVGNode
   name = "node"
   text = ""
+  position: Point = { x: 0, y: 0 }
   props: SVGProps<SVGRectElement> = {
     x: 0,
     y: 0,
     width: EditorLayer.RECT_SIZE,
     height: EditorLayer.RECT_SIZE,
     stroke: "white",
+    transform: `translate(${this.position.x}, ${this.position.y})`,
   }
 
   constructor(public entityID: number) {
@@ -43,6 +48,8 @@ export class Node implements StemElement {
   setPosition(x: number, y: number): void {
     this.props.x = x
     this.props.y = y
+    this.position.x = x
+    this.position.y = y
   }
 
   get jsxElementFunction() {
@@ -57,6 +64,13 @@ export class Document implements Element {
 
   addElement(element: Element): void {
     this.children.push(element)
+  }
+
+  removeElement(element: Element): void {
+    const index = this.children.indexOf(element)
+    if (index > -1) {
+      this.children.splice(index, 1)
+    }
   }
 }
 

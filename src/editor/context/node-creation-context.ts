@@ -7,11 +7,13 @@ import { Entity } from "../ecs/entity-component-system"
 import { Menu } from "./node-creation-component"
 import { ElementFactoryRegistry } from "../shapes/shape-factory"
 import { TextBoxNode } from "../shapes/text-box-factory"
+import type { ElementClass } from "../shapes/shape-factory"
+import { LineNode } from "../shapes/line-factory"
 
 //TODO: move to json
 const keybindsJson = {
   Escape: "exit",
-  Enter: "createTextBox",
+  Enter: "line",
 }
 
 const keybinds = Object.entries(keybindsJson)
@@ -56,17 +58,23 @@ export class NodeCreationContext extends AbstractContext {
     this.exit()
   }
 
-  @Command("createTextBox")
+  @Command("textBox")
   private createTextBox(text = "hello world"): void {
     this.destroyMenu()
-    const factory = this.factoryRegistry.getFactory(TextBoxNode)
+    this.createElementNode(TextBoxNode, text)
+  }
+
+  @Command("line")
+  private createLine(): void {
+    this.destroyMenu()
+    this.createElementNode(LineNode)
+  }
+
+  private createElementNode(element: ElementClass, ...args: any[]) {
+    const factory = this.factoryRegistry.getFactory(element)
     if (factory) {
-      factory.create(text)
+      factory.create(...args)
     }
-    // this.editorService.addElementAtCursor(
-    //   new ViEditor.TextBoxNode(this.editorService.generateEntity(), text)
-    // )
-    // this.exit()
   }
 
   private createMenuUI(entity: Entity): void {

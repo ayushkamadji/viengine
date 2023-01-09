@@ -6,6 +6,7 @@ export interface Context {
   onEvent(event: Event): void
   onEntry(params?: any): void
   onExit(params?: any): void
+  onRemove(params?: any): void
 }
 
 export abstract class AbstractContext implements Context {
@@ -19,6 +20,7 @@ export abstract class AbstractContext implements Context {
   onEvent(_event: Event): void {}
   onEntry(): void {}
   onExit(): void {}
+  onRemove(): void {}
 }
 
 export const emptyContext = {
@@ -26,4 +28,5 @@ export const emptyContext = {
   onEvent: () => {},
   onEntry: () => {},
   onExit: () => {},
+  onRemove: () => {},
 }

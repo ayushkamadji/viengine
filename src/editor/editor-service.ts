@@ -53,6 +53,11 @@ export class EditorService {
     }
   }
 
+  removeElement(element: StemElement) {
+    this.canvas.document.removeElement(element)
+    this.entityManager.removeEntity(element.entityID)
+  }
+
   private getCursorXY() {
     return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
   }
