@@ -1,9 +1,9 @@
-import { Event } from "../../lib/event"
 import { AbstractContext } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
 import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
 import { EditorService } from "../editor-service"
+import { FactoryRegistry } from "../shapes/shape-factory"
 
 // TODO: move to json, and figure out how to load
 const keybindsJson = {
@@ -23,6 +23,7 @@ export class RootContext extends AbstractContext {
   constructor(
     private readonly editorService: EditorService,
     contextNavigator: ContextNavigator,
+    private readonly factoryRegistry: FactoryRegistry,
     name = "root"
   ) {
     super(contextNavigator)
@@ -30,16 +31,15 @@ export class RootContext extends AbstractContext {
     this.nodeCreationContext = new NodeCreationContext(
       editorService,
       contextNavigator,
+      this.factoryRegistry,
       "nodeCreation"
     )
     this.nodeCreationContext.setExitContext(this)
     contextNavigator.registerContext(
-      `${name}.nodeCreation`,
+      `${name}/nodeCreation`,
       this.nodeCreationContext
     )
   }
-
-  onEvent(_event: Event): void {}
 
   onExit(): void {
     this.editorService.hideMainCursor()

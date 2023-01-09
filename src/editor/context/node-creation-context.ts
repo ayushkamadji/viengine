@@ -1,4 +1,3 @@
-import { Event } from "../../lib/event"
 import { AbstractContext, Context, emptyContext } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
 import { ViEditor } from "../editor"
@@ -6,12 +5,12 @@ import { EditorService } from "../editor-service"
 import { Command, CommandContext } from "./command-decorator"
 import { Entity } from "../ecs/entity-component-system"
 import { Menu } from "./node-creation-component"
+import { FactoryRegistry } from "../shapes/shape-factory"
 
 //TODO: move to json
 const keybindsJson = {
   Escape: "exit",
   Enter: "createTextBox",
-  // q: "createTextBox",
 }
 
 const keybinds = Object.entries(keybindsJson)
@@ -26,6 +25,7 @@ export class NodeCreationContext extends AbstractContext {
   constructor(
     private readonly editorService: EditorService,
     contextNavigator: ContextNavigator,
+    private readonly factoryRegistry: FactoryRegistry,
     name: string
   ) {
     super(contextNavigator)
@@ -36,8 +36,6 @@ export class NodeCreationContext extends AbstractContext {
     this.menuEntity = this.editorService.generateEntity()
     this.createMenuUI(this.menuEntity)
   }
-
-  onEvent(_event: Event): void {}
 
   setExitContext(context: Context): void {
     this.exitContext = context
@@ -58,11 +56,15 @@ export class NodeCreationContext extends AbstractContext {
   }
 
   @Command("createTextBox")
-  private createTextBox(text = "hello world"): void {
-    this.editorService.addElementAtCursor(
-      new ViEditor.TextBoxNode(this.editorService.generateEntity(), text)
-    )
-    this.exit()
+  private createTextBox(_text = "hello world"): void {
+    const factory = this.factoryRegistry.getFactory(ViEditor.TextBoxNode)
+    if (factory) {
+      console.log("factory", factory)
+    }
+    // this.editorService.addElementAtCursor(
+    //   new ViEditor.TextBoxNode(this.editorService.generateEntity(), text)
+    // )
+    // this.exit()
   }
 
   private createMenuUI(entity: Entity): void {

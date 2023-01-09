@@ -4,8 +4,8 @@ import { ContextNavigator } from "./context-navigator"
 export interface Context {
   name: string
   onEvent(event: Event): void
-  onEntry(): void
-  onExit(): void
+  onEntry(params?: any): void
+  onExit(params?: any): void
 }
 
 export abstract class AbstractContext implements Context {
@@ -16,8 +16,7 @@ export abstract class AbstractContext implements Context {
     this.getNavigator = () => contextNavigator
   }
 
-  abstract onEvent(event: Event): void
-
+  onEvent(_event: Event): void {}
   onEntry(): void {}
   onExit(): void {}
 }

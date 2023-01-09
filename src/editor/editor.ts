@@ -17,6 +17,7 @@ import { Cursor, GridPoint, SVGNode, TextBox } from "./editor-components"
 import { ElementFunction } from "./ecs-systems/renderer-element"
 import { EditorService } from "./editor-service"
 import { SVGProps } from "react"
+import { FactoryRegistry } from "./shapes/shape-factory"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -62,6 +63,7 @@ export class EditorLayer implements Layer {
   private staticUIRendererSystem: StaticUIRendererSystem
   private canvasRendererSystem: CanvasRendererSystem
   private editorService: EditorService
+  private factoryRegistry: FactoryRegistry
 
   constructor(
     private readonly uiRenderer: UIRenderer,
@@ -95,6 +97,11 @@ export class EditorLayer implements Layer {
       this.canvas
     )
 
+    this.factoryRegistry = new FactoryRegistry(
+      this.editorService,
+      this.contextNavigator
+    )
+
     this.addUIGrid()
     this.staticUIRendererSystem.update()
 
@@ -103,7 +110,8 @@ export class EditorLayer implements Layer {
 
     const rootContext = new RootContext(
       this.editorService,
-      this.contextNavigator
+      this.contextNavigator,
+      this.factoryRegistry
     )
     this.contextNavigator.registerContext("root", rootContext)
     this.contextNavigator.navigateTo("root")

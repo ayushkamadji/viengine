@@ -27,6 +27,7 @@ module.exports = {
     "@typescript-eslint/ignoreRestSiblings": "off",
     "@typescript-eslint/no-empty-function": "warn",
     "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/prefer-namespace-keyword": "off",
   },
   settings: {
     react: {
