@@ -3,7 +3,7 @@ import { ContextNavigator } from "./context-navigator"
 import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
 import { EditorService } from "../editor-service"
-import { FactoryRegistry } from "../shapes/shape-factory"
+import { ElementFactoryRegistry } from "../shapes/shape-factory"
 
 // TODO: move to json, and figure out how to load
 const keybindsJson = {
@@ -23,7 +23,7 @@ export class RootContext extends AbstractContext {
   constructor(
     private readonly editorService: EditorService,
     contextNavigator: ContextNavigator,
-    private readonly factoryRegistry: FactoryRegistry,
+    private readonly factoryRegistry: ElementFactoryRegistry,
     name = "root"
   ) {
     super(contextNavigator)
@@ -51,7 +51,7 @@ export class RootContext extends AbstractContext {
 
   @Command("navToCreateNode")
   private navigateToNodeCreationContext(): void {
-    this.getNavigator().navigateTo(`${"root"}.nodeCreation`)
+    this.getNavigator().navigateTo(`${"root"}/nodeCreation`)
   }
 
   @Command("moveLeft")

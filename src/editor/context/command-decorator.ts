@@ -26,7 +26,6 @@ export function CommandContext(config: CommandContextConfig) {
   const result = function _CommandContext<
     T extends { new (...args: any[]): Context }
   >(ctor: T) {
-    console.log("hello")
     return class extends ctor {
       private commandResolver: CommandResolver = new CommandResolver()
       constructor(...args: any[]) {

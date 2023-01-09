@@ -13,11 +13,11 @@ import {
   UIRendererComponent,
   UIRendererSystem,
 } from "./ecs-systems/render-system"
-import { Cursor, GridPoint, SVGNode, TextBox } from "./editor-components"
-import { ElementFunction } from "./ecs-systems/renderer-element"
+import { Cursor, GridPoint } from "./editor-components"
 import { EditorService } from "./editor-service"
-import { SVGProps } from "react"
-import { FactoryRegistry } from "./shapes/shape-factory"
+import { ElementFactoryRegistry } from "./shapes/shape-factory"
+import { TextBoxFactory, TextBoxNode } from "./shapes/text-box-factory"
+import { Document } from "./vieditor-element"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -46,7 +46,7 @@ export class UI {
 }
 
 export class Canvas {
-  document: ViEditor.Document = new ViEditor.Document()
+  constructor(public document: Document) {}
 }
 
 export class EditorLayer implements Layer {
@@ -55,15 +55,15 @@ export class EditorLayer implements Layer {
   static RECT_SIZE = 30
   static GRID_DOT_SIZE = 2
   private contextNavigator: ContextNavigator
-  private document: ViEditor.Document = new ViEditor.Document()
+  private document: Document = new Document()
   private ui: UI = new UI()
-  private canvas: Canvas = new Canvas()
+  private canvas: Canvas = new Canvas(this.document)
   private entityManager: EntityManager
   private uiRendererSystem: UIRendererSystem
   private staticUIRendererSystem: StaticUIRendererSystem
   private canvasRendererSystem: CanvasRendererSystem
   private editorService: EditorService
-  private factoryRegistry: FactoryRegistry
+  private factoryRegistry: ElementFactoryRegistry
 
   constructor(
     private readonly uiRenderer: UIRenderer,
@@ -97,10 +97,12 @@ export class EditorLayer implements Layer {
       this.canvas
     )
 
-    this.factoryRegistry = new FactoryRegistry(
+    this.factoryRegistry = new ElementFactoryRegistry(
       this.editorService,
       this.contextNavigator
     )
+
+    this.factoryRegistry.registerFactory(TextBoxNode, TextBoxFactory)
 
     this.addUIGrid()
     this.staticUIRendererSystem.update()
@@ -163,102 +165,6 @@ export class EditorLayer implements Layer {
         })
         this.entityManager.addComponent(uiEntity, uiRendererComponent)
       }
-    }
-  }
-}
-
-export namespace ViEditor {
-  export interface Element {
-    readonly entityID: number
-    name: string
-    children?: Element[]
-  }
-
-  export type StemElement = Element & {
-    readonly jsxElementFunction?: ElementFunction
-    props: any
-    setPosition(x: number, y: number): void
-  }
-
-  export class Node implements StemElement {
-    static _jsxElementFunction = SVGNode
-    name = "node"
-    text = ""
-    props: SVGProps<SVGRectElement> = {
-      x: 0,
-      y: 0,
-      width: EditorLayer.RECT_SIZE,
-      height: EditorLayer.RECT_SIZE,
-      stroke: "white",
-    }
-
-    constructor(public entityID: number) {
-      this.text = entityID.toString()
-    }
-    children?: Element[] | undefined
-
-    setPosition(x: number, y: number): void {
-      this.props.x = x
-      this.props.y = y
-    }
-
-    get jsxElementFunction() {
-      return Node._jsxElementFunction
-    }
-  }
-
-  export class TextBoxNode implements StemElement {
-    static _jsxElementFunction = TextBox
-    name = "text-box-node"
-    props = {
-      x: 0,
-      y: 0,
-      transform: "",
-      width: 280,
-      height: 100,
-      text: "",
-      rectProps: {
-        x: 0,
-        y: 0,
-        width: 220,
-        height: 100,
-        stroke: "white",
-      },
-      textProps: {
-        x: 110,
-        y: 50,
-        fill: "white",
-        "alignment-baseline": "middle",
-        "text-anchor": "middle",
-      },
-    }
-
-    constructor(public entityID: number, text: string) {
-      this.props.text = text
-    }
-
-    get jsxElementFunction() {
-      return TextBoxNode._jsxElementFunction
-    }
-
-    setPosition(x: number, y: number) {
-      this.props.transform = `translate(${x}, ${y})`
-      // this.props.x = x
-      // this.props.rectProps.x = x
-      // this.props.textProps.x = x
-      // this.props.y = y
-      // this.props.rectProps.y = y
-      // this.props.textProps.y = y
-    }
-  }
-
-  export class Document implements Element {
-    entityID = 0
-    name = "document"
-    children: Element[] = []
-
-    addElement(element: Element): void {
-      this.children.push(element)
     }
   }
 }

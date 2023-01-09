@@ -4,11 +4,12 @@ import {
   UIRendererComponent,
 } from "./ecs-systems/render-system"
 import { ElementFunction } from "./ecs-systems/renderer-element"
-import { ViEditor, UI, Canvas, Util } from "./editor"
+import { UI, Canvas, Util } from "./editor"
+import { Document, StemElement } from "./vieditor-element"
 
 export class EditorService {
   constructor(
-    readonly document: ViEditor.Document,
+    readonly document: Document,
     private readonly entityManager: EntityManager,
     private readonly cursorEntity: Entity,
     private readonly ui: UI,
@@ -36,7 +37,7 @@ export class EditorService {
     return this.ui.cursor
   }
 
-  addElementAtCursor(element: ViEditor.StemElement) {
+  addElementAtCursor(element: StemElement) {
     this.canvas.document.addElement(element)
 
     const [x, y] = this.getCursorXY()
@@ -82,6 +83,14 @@ export class EditorService {
       this.getCursorEntityComponentContainer()
 
     rendererComponent.setProps({ hidden: "" })
+  }
+
+  setElementProps(entity: Entity, props: any) {
+    const rendererComponent: CanvasRendererComponent = this.entityManager
+      .getEntityComponentContainer(entity)
+      .get(CanvasRendererComponent)
+
+    rendererComponent.setProps(props)
   }
 
   private getCursorEntityComponentContainer(): UIRendererComponent {
