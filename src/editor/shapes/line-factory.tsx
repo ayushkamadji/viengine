@@ -11,7 +11,7 @@ export const Line: ElementFunction = ({ gProps, lineProps }) => {
     <g {...gProps}>
       <defs>
         <marker
-          id="arrowhead"
+          id="end-arrowhead"
           markerWidth="10"
           markerHeight="7"
           refX="0"
@@ -19,6 +19,17 @@ export const Line: ElementFunction = ({ gProps, lineProps }) => {
           orient="auto"
         >
           <polygon points="0 0, 10 3.5, 0 7" fill={lineProps.stroke} />
+        </marker>
+        <marker
+          id="start-arrowhead"
+          markerWidth="10"
+          markerHeight="7"
+          refX="0"
+          refY="3.5"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="10 0, 10 7, 0 3.5" fill={lineProps.stroke} />
         </marker>
       </defs>
       <line {...lineProps}></line>
@@ -34,6 +45,7 @@ type LineProps = {
   "stroke-width": number
   stroke: string
   "marker-end"?: string
+  "marker-start"?: string
 }
 
 export class LineNode implements StemElement {
@@ -50,7 +62,7 @@ export class LineNode implements StemElement {
       y2: 40,
       "stroke-width": 2,
       stroke: "white",
-      "marker-end": "url(#arrowhead)",
+      "marker-end": "url(#end-arrowhead)",
     },
   }
   position: Point = { x: 0, y: 0 }
@@ -102,6 +114,7 @@ export class LineNodeFactory implements ShapeFactory {
     ["k", "moveP2up"],
     ["l", "moveP2right"],
     ["e", "toggleEndMarker"],
+    ["s", "toggleStartMarker"],
     ["Escape", "cancel"],
     ["Enter", "exit"],
   ],
@@ -147,7 +160,17 @@ export class LineEditContext extends AbstractContext {
       const { "marker-end": _, ...rest } = this.line.props.lineProps
       this.setProps({ ...this.line.props, lineProps: rest })
     } else {
-      this.updateLineProps({ "marker-end": "url(#arrowhead)" })
+      this.updateLineProps({ "marker-end": "url(#end-arrowhead)" })
+    }
+  }
+
+  @Command("toggleStartMarker")
+  private toggleStartMarker(): void {
+    if (this.line.props.lineProps["marker-start"]) {
+      const { "marker-start": _, ...rest } = this.line.props.lineProps
+      this.setProps({ ...this.line.props, lineProps: rest })
+    } else {
+      this.updateLineProps({ "marker-start": "url(#start-arrowhead)" })
     }
   }
 
