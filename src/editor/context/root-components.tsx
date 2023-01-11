@@ -22,3 +22,11 @@ export const Menu: ElementFunction = ({ x, y, items }: MenuProps) => {
     </div>
   )
 }
+
+export const ArrowDown = ({ x, y }: BaseUIPropType) => {
+  return (
+    <div id="down-arrow" data-x={x} data-y={y}>
+      &#x25BC;
+    </div>
+  )
+}

@@ -1,18 +1,18 @@
-import { Context, emptyContext } from "./context.interface"
+import { Context, ContextFactory, emptyContext } from "./context.interface"
 
 export class ContextNavigator {
-  private contextRegistry: Map<string, Context> = new Map()
+  private contextRegistry: Map<string, Context | ContextFactory> = new Map()
   private currentContext: Context
 
   constructor() {
     this.currentContext = emptyContext
   }
 
-  registerContext(path: string, context: Context): void {
+  registerContext(path: string, context: Context | ContextFactory): void {
     this.contextRegistry.set(path, context)
   }
 
-  navigateTo(path: Context | string): void {
+  navigateTo(path: Context | string, ...args: any[]): void {
     let resolvedPath: string
 
     if (typeof path === "string") {
@@ -24,9 +24,16 @@ export class ContextNavigator {
     const context = this.contextRegistry.get(resolvedPath)
 
     if (context) {
-      console.log(`Navigating to ${resolvedPath}`)
+      console.log(`Navigating to ${resolvedPath}`, ...args)
+
       this.currentContext.onExit()
-      this.currentContext = context
+
+      if ("create" in context) {
+        this.currentContext = context.create(...args)
+      } else {
+        this.currentContext = context
+      }
+
       this.currentContext.onEntry()
     }
   }

@@ -22,6 +22,9 @@ export abstract class AbstractContext implements Context {
   onExit(): void {}
   onRemove(): void {}
 }
+export interface ContextFactory {
+  create(...args: any[]): Context
+}
 
 export const emptyContext = {
   name: "emptyContext",

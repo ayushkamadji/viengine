@@ -3,16 +3,9 @@ import {
   StaticUIRendererComponent,
   UIRendererComponent,
 } from "../ecs-systems/render-system"
+import { SelectorComponent } from "../ecs-systems/selector-system"
 
 export type Entity = number
-
-export class SelectorComponent {
-  //Note: Add layer id for multilayer support later
-  constructor(
-    public role: "pointer" | "selectable",
-    public points: { x: number; y: number }[]
-  ) {}
-}
 
 export type Component =
   | CanvasRendererComponent
@@ -79,6 +72,12 @@ export class EntityManager {
     }
   }
 
+  removeComponent(entity: Entity, component: ComponentClass): void {
+    if (this.entities.includes(entity)) {
+      this.entityComponents.get(entity)!.delete(component)
+    }
+  }
+
   removeEntity(entity: Entity): void {
     this.entities = this.entities.filter((e) => e !== entity)
     this.entityComponents.delete(entity)
@@ -102,5 +101,5 @@ export class EntityManager {
 }
 
 export interface ManagedSystem {
-  update(): void
+  update(...args: any[]): void
 }

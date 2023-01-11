@@ -4,6 +4,9 @@ import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
 import { EditorService } from "../editor-service"
 import { ElementFactoryRegistry } from "../shapes/shape-factory"
+import { HighlightContextFactory } from "./highlight-context-factory"
+import { Entity } from "../ecs/entity-component-system"
+import { HighlightParams } from "../ecs-systems/selector-system"
 
 // TODO: move to json, and figure out how to load
 const keybindsJson = {
@@ -19,6 +22,7 @@ const keybinds = Object.entries(keybindsJson)
 export class RootContext extends AbstractContext {
   name: string
   private readonly nodeCreationContext: NodeCreationContext
+  private readonly highlightContextFactory: HighlightContextFactory
 
   constructor(
     private readonly editorService: EditorService,
@@ -38,6 +42,15 @@ export class RootContext extends AbstractContext {
     contextNavigator.registerContext(
       `${name}/nodeCreation`,
       this.nodeCreationContext
+    )
+
+    this.highlightContextFactory = new HighlightContextFactory(
+      this.editorService,
+      contextNavigator
+    )
+    contextNavigator.registerContext(
+      "/root/highlight",
+      this.highlightContextFactory
     )
   }
 
@@ -75,11 +88,16 @@ export class RootContext extends AbstractContext {
   }
 
   private moveCursor(deltaX: number, deltaY: number): void {
+    this.editorService.showMainCursor()
     const { col: currentCol, row: currentRow } =
       this.editorService.getCursorPosition()
     this.editorService.setCursorPosition(
       currentCol + deltaX,
       currentRow + deltaY
     )
+  }
+
+  onHighlight(entity: Entity, params: HighlightParams): void {
+    this.getNavigator().navigateTo("/root/highlight", entity, params)
   }
 }

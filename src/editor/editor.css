@@ -20,6 +20,14 @@
   height: 6px;
   background-color: #0f0;
   animation: blink 1s steps(2, jump-none) infinite;
+  z-index: 500;
+}
+
+#down-arrow {
+  position: absolute;
+  color: #0f0;
+  animation: blink 1.6s steps(2, jump-none) infinite;
+  z-index: 500;
 }
 
 .hidden {

@@ -58,8 +58,8 @@ export class LineNode implements StemElement {
     lineProps: {
       x1: 0,
       y1: 0,
-      x2: 40,
-      y2: 40,
+      x2: 120,
+      y2: 80,
       "stroke-width": 2,
       stroke: "white",
       "marker-end": "url(#end-arrowhead)",
@@ -73,6 +73,14 @@ export class LineNode implements StemElement {
 
   get jsxElementFunction() {
     return LineNode._jsxElementFunction
+  }
+
+  get geometry() {
+    const { x1, y1, x2, y2 } = this.props.lineProps
+    const p1 = { x: x1 + this.position.x, y: y1 + this.position.y }
+    const p2 = { x: x2 + this.position.x, y: y2 + this.position.y }
+
+    return { p1, p2 }
   }
 
   setPosition(x: number, y: number): void {

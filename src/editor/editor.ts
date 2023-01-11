@@ -19,6 +19,8 @@ import { ElementFactoryRegistry } from "./shapes/shape-factory"
 import { TextBoxFactory, TextBoxNode } from "./shapes/text-box-factory"
 import { Document } from "./vieditor-element"
 import { LineNode, LineNodeFactory } from "./shapes/line-factory"
+import { HighlightParams, SelectorSystem } from "./ecs-systems/selector-system"
+import { Line } from "../lib/util/geometry"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -30,6 +32,22 @@ export class Util {
       (EditorLayer.CURSOR_SIZE - EditorLayer.GRID_DOT_SIZE) / 2
     return [x, y]
   }
+  static cursorCanvasXYToColRow(
+    x: number,
+    y: number
+  ): { col: number; row: number } {
+    const col = Math.round(
+      (x + (EditorLayer.CURSOR_SIZE - EditorLayer.GRID_DOT_SIZE) / 2) /
+        EditorLayer.GRID_GAP -
+        1
+    )
+    const row = Math.round(
+      (y + (EditorLayer.CURSOR_SIZE - EditorLayer.GRID_DOT_SIZE) / 2) /
+        EditorLayer.GRID_GAP -
+        1
+    )
+    return { col, row }
+  }
 }
 
 export type Cursor = {
@@ -39,10 +57,27 @@ export type Cursor = {
 
 export class UI {
   cursor: Cursor = { col: 0, row: 0 }
+  private cursorMotionCallback: (motion: Line) => void = () => {}
 
   setCursorPosition(col: number, row: number) {
+    const motion: Line = this.getCursorMotion(col, row)
     this.cursor.col = col
     this.cursor.row = row
+    this.cursorMotionCallback(motion)
+  }
+
+  private getCursorMotion(col: number, row: number): Line {
+    const [x1, y1] = Util.cursorColRowToCanvasXY(
+      this.cursor.col,
+      this.cursor.row
+    )
+    const [x2, y2] = Util.cursorColRowToCanvasXY(col, row)
+
+    return { p1: { x: x1, y: y1 }, p2: { x: x2, y: y2 } }
+  }
+
+  setCursorMotionCallback(callback: (motion: Line) => void) {
+    this.cursorMotionCallback = callback
   }
 }
 
@@ -65,6 +100,8 @@ export class EditorLayer implements Layer {
   private canvasRendererSystem: CanvasRendererSystem
   private editorService: EditorService
   private factoryRegistry: ElementFactoryRegistry
+  private selectorSystem: SelectorSystem
+  private rootContext: RootContext
 
   constructor(
     private readonly uiRenderer: UIRenderer,
@@ -88,14 +125,21 @@ export class EditorLayer implements Layer {
       this.canvasRenderer
     )
 
+    this.selectorSystem = new SelectorSystem(this.entityManager)
+    this.ui.setCursorMotionCallback((motion: Line) =>
+      this.selectorSystem.update(motion)
+    )
+
     const cursorEntity = this.entityManager.createEntity()
+    const highlighterEntity = this.entityManager.createEntity()
 
     this.editorService = new EditorService(
       this.document,
       this.entityManager,
       cursorEntity,
       this.ui,
-      this.canvas
+      this.canvas,
+      highlighterEntity
     )
 
     this.factoryRegistry = new ElementFactoryRegistry(
@@ -112,13 +156,15 @@ export class EditorLayer implements Layer {
     this.addCursor(cursorEntity)
     this.render()
 
-    const rootContext = new RootContext(
+    this.rootContext = new RootContext(
       this.editorService,
       this.contextNavigator,
       this.factoryRegistry
     )
-    this.contextNavigator.registerContext("root", rootContext)
+    this.contextNavigator.registerContext("root", this.rootContext)
     this.contextNavigator.navigateTo("root")
+
+    this.selectorSystem.setHighlightCallback(this.onHighlight.bind(this))
   }
 
   onEvent(event: Event): void {
@@ -168,5 +214,9 @@ export class EditorLayer implements Layer {
         this.entityManager.addComponent(uiEntity, uiRendererComponent)
       }
     }
+  }
+
+  private onHighlight(entity: Entity, params: HighlightParams) {
+    this.rootContext.onHighlight(entity, params)
   }
 }

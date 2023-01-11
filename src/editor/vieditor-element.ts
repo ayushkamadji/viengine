@@ -2,6 +2,7 @@ import { SVGNode } from "./editor-components"
 import { ElementFunction } from "./ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { EditorLayer } from "./editor"
+import { Geometry } from "../lib/util/geometry"
 
 export interface Element {
   readonly entityID: number
@@ -13,6 +14,7 @@ export type Point = { x: number; y: number; z?: number }
 
 export interface StemElement extends Element {
   readonly jsxElementFunction?: ElementFunction
+  readonly geometry?: Geometry
   props: any
   position: Point
   setPosition(x: number, y: number): void

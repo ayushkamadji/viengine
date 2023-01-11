@@ -11,6 +11,7 @@ import { Event, KeyDownEvent } from "../../lib/event"
 import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
+import { Geometry } from "../../lib/util/geometry"
 
 const printableKeys = [
   "a",
@@ -67,7 +68,12 @@ export class TextBoxFactory implements ShapeFactory {
   }
 }
 
-@CommandContext({ keybinds: [["Escape", "exit"]] })
+@CommandContext({
+  keybinds: [
+    ["Escape", "exit"],
+    ["i", "insert"],
+  ],
+})
 export class TextBoxEditContext extends AbstractContext {
   private readonly insertModeContext: InsertModeContext
 
@@ -93,6 +99,11 @@ export class TextBoxEditContext extends AbstractContext {
 
   onEntry(): void {
     console.log("text box edit on entry")
+  }
+
+  @Command("insert")
+  private insert(): void {
+    this.getNavigator().navigateTo(this.insertModeContext.name)
   }
 
   @Command("exit")
@@ -185,7 +196,7 @@ export class TextBoxNode implements TextElement {
     x: 0,
     y: 0,
     transform: "translate(0, 0)",
-    width: 280,
+    width: 220,
     height: 100,
     text: "",
     rectProps: {
@@ -211,6 +222,15 @@ export class TextBoxNode implements TextElement {
 
   get jsxElementFunction() {
     return TextBoxNode._jsxElementFunction
+  }
+
+  get geometry(): Geometry {
+    const p1 = this.position
+    const p2 = { ...p1, x: p1.x + this.props.width }
+    const p3 = { ...p2, y: p2.y + this.props.height }
+    const p4 = { ...p3, x: p3.x - this.props.width }
+
+    return [p1, p2, p3, p4]
   }
 
   setPosition(x: number, y: number) {
