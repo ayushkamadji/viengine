@@ -50,6 +50,7 @@ type LineProps = {
 
 export class LineNode implements StemElement {
   static _jsxElementFunction = Line
+
   name: string
   props: { gProps: any; lineProps: LineProps } = {
     gProps: {
@@ -75,7 +76,7 @@ export class LineNode implements StemElement {
     return LineNode._jsxElementFunction
   }
 
-  get geometry() {
+  geometryFn = () => {
     const { x1, y1, x2, y2 } = this.props.lineProps
     const p1 = { x: x1 + this.position.x, y: y1 + this.position.y }
     const p2 = { x: x2 + this.position.x, y: y2 + this.position.y }

@@ -14,7 +14,7 @@ export type Point = { x: number; y: number; z?: number }
 
 export interface StemElement extends Element {
   readonly jsxElementFunction?: ElementFunction
-  readonly geometry?: Geometry
+  readonly geometryFn?: () => Geometry
   props: any
   position: Point
   setPosition(x: number, y: number): void

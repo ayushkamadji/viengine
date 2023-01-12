@@ -11,7 +11,6 @@ import { Event, KeyDownEvent } from "../../lib/event"
 import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
-import { Geometry } from "../../lib/util/geometry"
 
 const printableKeys = [
   "a",
@@ -72,6 +71,10 @@ export class TextBoxFactory implements ShapeFactory {
   keybinds: [
     ["Escape", "exit"],
     ["i", "insert"],
+    ["h", "moveLeft"],
+    ["j", "moveDown"],
+    ["k", "moveUp"],
+    ["l", "moveRight"],
   ],
 })
 export class TextBoxEditContext extends AbstractContext {
@@ -106,6 +109,26 @@ export class TextBoxEditContext extends AbstractContext {
     this.getNavigator().navigateTo(this.insertModeContext.name)
   }
 
+  @Command("moveLeft")
+  private moveLeft() {
+    this.editorService.moveElement(this.docElement, -1, 0)
+  }
+
+  @Command("moveDown")
+  private moveDown() {
+    this.editorService.moveElement(this.docElement, 0, 1)
+  }
+
+  @Command("moveUp")
+  private moveUp() {
+    this.editorService.moveElement(this.docElement, 0, -1)
+  }
+
+  @Command("moveRight")
+  private moveRight() {
+    this.editorService.moveElement(this.docElement, 1, 0)
+  }
+
   @Command("exit")
   private exit(): void {
     this.getNavigator().navigateTo("root")
@@ -123,7 +146,9 @@ export class NormalModeContext extends AbstractContext {
   }
 }
 
-@CommandContext({ keybinds: [["Escape", "exit"]] })
+@CommandContext({
+  keybinds: [["Escape", "exit"]],
+})
 export class InsertModeContext extends AbstractContext {
   private exitContext: Context = emptyContext
 
@@ -224,7 +249,7 @@ export class TextBoxNode implements TextElement {
     return TextBoxNode._jsxElementFunction
   }
 
-  get geometry(): Geometry {
+  geometryFn = () => {
     const p1 = this.position
     const p2 = { ...p1, x: p1.x + this.props.width }
     const p3 = { ...p2, y: p2.y + this.props.height }

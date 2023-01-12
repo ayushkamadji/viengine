@@ -13,6 +13,8 @@ import { LineNode } from "../shapes/line-factory"
 //TODO: move to json
 const keybindsJson = {
   Escape: "exit",
+  l: "line",
+  t: "textBox",
   Enter: "line",
 }
 

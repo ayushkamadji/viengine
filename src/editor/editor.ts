@@ -61,9 +61,13 @@ export class UI {
 
   setCursorPosition(col: number, row: number) {
     const motion: Line = this.getCursorMotion(col, row)
+    this.adjustCursorPosition(col, row)
+    this.cursorMotionCallback(motion)
+  }
+
+  adjustCursorPosition(col: number, row: number) {
     this.cursor.col = col
     this.cursor.row = row
-    this.cursorMotionCallback(motion)
   }
 
   private getCursorMotion(col: number, row: number): Line {

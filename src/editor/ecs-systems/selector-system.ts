@@ -40,12 +40,11 @@ type HighlightCallback = (
 ) => void
 
 export class SelectorComponent {
-  constructor(public readonly geometry: Geometry) {}
-  // private readonly getGeometry: (props) => Geometry,
-  // private props: any[]
-  // get geometry() {
-  //   this.getGeometry(this.props)
-  // }
+  constructor(private readonly geometryFn: () => Geometry) {}
+
+  get geometry() {
+    return this.geometryFn()
+  }
 }
 
 export class SelectorSystem implements ManagedSystem {
@@ -167,10 +166,10 @@ function exitPositionsFromLine(
 }
 
 function motionIntersectsLine(cursorMotion: Line, line: Line): boolean {
-  const { t, inLine2 } = linesIntersectParams(cursorMotion, line)
+  const { t, u } = linesIntersectParams(cursorMotion, line)
   if (isNaN(t)) {
     return false
   } else {
-    return t > 0 && t <= 1 && inLine2
+    return t > 0 && t <= 1 && u >= 0 && u <= 1
   }
 }

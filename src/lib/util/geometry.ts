@@ -5,10 +5,6 @@ export type Point = {
   y: number
 }
 
-// TODO: EPSILON needs to be higher than 9e-13 (based on testing with grid gap 40)
-// avoid setting to high to avoid collision when not supposed to
-export const EPSILON = 5000 * Number.EPSILON
-
 export type Polygon = Point[]
 
 export type Line = {
@@ -44,18 +40,18 @@ export const isLine = (geometry: Geometry): geometry is Line => {
 }
 
 export const linesIntersect = (l1: Line, l2: Line): boolean => {
-  const { t, inLine2 } = linesIntersectParams(l1, l2)
+  const { t, u } = linesIntersectParams(l1, l2)
   if (isNaN(t)) {
     return false
   } else {
-    return t >= 0 && t <= 1 && inLine2
+    return t >= 0 && t <= 1 && u >= 0 && u <= 1
   }
 }
 
 export const linesIntersectParams = (
   l1: Line,
   l2: Line
-): { t: number; inLine2: boolean } => {
+): { t: number; u: number } => {
   const { x: x1, y: y1 } = l1.p1
   const { x: x2, y: y2 } = l1.p2
   const { x: x3, y: y3 } = l2.p1
@@ -65,37 +61,38 @@ export const linesIntersectParams = (
 
   if (tDenom === 0) {
     // FIXME: parallel or collinear detection
-    return { t: NaN, inLine2: false }
+    return { t: NaN, u: NaN }
   }
 
   const t = ((y4 - y3) * (x1 - x3) - (x4 - x3) * (y1 - y3)) / tDenom
+  const u = ((y2 - y1) * (x1 - x3) - (x2 - x1) * (y1 - y3)) / tDenom
 
-  const intersectionPoint = {
-    x: x1 + t * (x2 - x1),
-    y: y1 + t * (y2 - y1),
-  }
+  // const intersectionPoint = {
+  //   x: x1 + t * (x2 - x1),
+  //   y: y1 + t * (y2 - y1),
+  // }
 
-  const inLine2 = pointInLine(l2, intersectionPoint)
-
-  return { t, inLine2 }
+  return { t, u }
 }
 
 export const motionIntersectsLine = (motion: Line, line: Line): boolean => {
-  const { t, inLine2 } = linesIntersectParams(motion, line)
+  const { t, u } = linesIntersectParams(motion, line)
   if (isNaN(t)) {
     return false
   } else {
-    return t > 0 && t <= 1 && inLine2
+    return t > 0 && t <= 1 && u >= 0 && u <= 1
   }
 }
 
-const pointInLine = (l2: Line, point: Point): boolean => {
-  const { x: x1, y: y1 } = l2.p1
-  const { x: x2, y: y2 } = l2.p2
-  const { x: xi, y: yi } = point
+// const pointInLine = (l2: Line, point: Point): boolean => {
+//   const { x: x1, y: y1 } = l2.p1
+//   const { x: x2, y: y2 } = l2.p2
+//   const { x: xi, y: yi } = point
 
-  return Math.abs((xi - x1) * (y2 - y1) - (yi - y1) * (x2 - x1)) < EPSILON
-}
+//   const result = Math.abs((xi - x1) * (y2 - y1) - (yi - y1) * (x2 - x1))
+
+//   return result < EPSILON
+// }
 
 export enum Direction {
   UP = "UP",

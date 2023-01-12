@@ -4,7 +4,7 @@ import {
   UIRendererComponent,
 } from "./ecs-systems/render-system"
 import { ElementFunction } from "./ecs-systems/renderer-element"
-import { UI, Canvas, Util } from "./editor"
+import { UI, Canvas, Util, EditorLayer } from "./editor"
 import { Document, StemElement } from "./vieditor-element"
 import { SelectorComponent } from "./ecs-systems/selector-system"
 import { Geometry, isLine, isPolygon, Point } from "../lib/util/geometry"
@@ -32,7 +32,7 @@ export class EditorService {
   setCursorPosition(col: number, row: number) {
     this.ui.setCursorPosition(col, row)
     const rendererComponent: UIRendererComponent =
-      this.getCursorEntityComponentContainer()
+      this.getCursorRendererComponent()
 
     const [x, y] = Util.cursorColRowToCanvasXY(col, row)
     rendererComponent.setProps({ x, y })
@@ -57,10 +57,10 @@ export class EditorService {
       this.entityManager.addComponent(entity, canvasRendererComponent)
     }
 
-    if (element.geometry) {
+    if (element.geometryFn) {
       this.entityManager.addComponent(
         element.entityID,
-        new SelectorComponent(element.geometry)
+        new SelectorComponent(element.geometryFn)
       )
     }
   }
@@ -97,8 +97,8 @@ export class EditorService {
       : isLine(geometry)
       ? [geometry.p1, geometry.p2]
       : []
-    const ySortedPoints = [...points].sort((a, b) => a.y - b.y)
-    const yxSortedPoints = ySortedPoints.sort((a, b) => a.x - b.x)
+    const xSortedPoints = [...points].sort((a, b) => a.x - b.x)
+    const yxSortedPoints = xSortedPoints.sort((a, b) => a.y - b.y)
     const { x, y } = yxSortedPoints[0]
 
     const rendererComponent = new UIRendererComponent(ArrowDown, {
@@ -121,14 +121,14 @@ export class EditorService {
 
   hideMainCursor() {
     const rendererComponent: UIRendererComponent =
-      this.getCursorEntityComponentContainer()
+      this.getCursorRendererComponent()
 
     rendererComponent.setProps({ hidden: "hidden" })
   }
 
   showMainCursor() {
     const rendererComponent: UIRendererComponent =
-      this.getCursorEntityComponentContainer()
+      this.getCursorRendererComponent()
 
     rendererComponent.setProps({ hidden: "" })
   }
@@ -141,9 +141,28 @@ export class EditorService {
     rendererComponent.setProps(props)
   }
 
-  private getCursorEntityComponentContainer(): UIRendererComponent {
+  private getCursorRendererComponent(): UIRendererComponent {
     return this.entityManager
       .getEntityComponentContainer(this.cursorEntity)
       .get(UIRendererComponent)
+  }
+
+  moveElement(element: StemElement, colDelta: number, rowDelta: number) {
+    const { col, row } = this.ui.cursor
+    const newCol = col + colDelta
+    const newRow = row + rowDelta
+    this.ui.adjustCursorPosition(newCol, newRow)
+
+    const { x, y } = element.position
+    element.setPosition(
+      x + colDelta * EditorLayer.GRID_GAP,
+      y + rowDelta * EditorLayer.GRID_GAP
+    )
+    this.setElementProps(element.entityID, element.props)
+
+    const rendererComponent: UIRendererComponent =
+      this.getCursorRendererComponent()
+    const [cursorX, cursorY] = Util.cursorColRowToCanvasXY(newCol, newRow)
+    rendererComponent.setProps({ x: cursorX, y: cursorY })
   }
 }
