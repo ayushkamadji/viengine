@@ -40,3 +40,20 @@ export const SVGNode: SVGElementFunction<SVGRectElement> = (
 ) => {
   return <rect {...props}></rect>
 }
+
+export const Hints: ElementFunction = ({
+  items,
+}: {
+  items: [string, string][]
+}) => {
+  return (
+    <div className="ui-hints">
+      {items &&
+        items.flat().map((keyOrValue, index) => (
+          <div key={index} className="ui-hints-item">
+            {keyOrValue}
+          </div>
+        ))}
+    </div>
+  )
+}

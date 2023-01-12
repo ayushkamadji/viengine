@@ -16,8 +16,6 @@ import { LineNode } from "../shapes/line-factory"
 //TODO: move to json
 const keybindsJson = {
   Escape: "exit",
-  l: "arrow",
-  t: "textBox",
   j: "menuDown",
   k: "menuUp",
   Enter: "executeCommand",

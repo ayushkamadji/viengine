@@ -13,7 +13,7 @@ import {
   UIRendererComponent,
   UIRendererSystem,
 } from "./ecs-systems/render-system"
-import { Cursor, GridPoint } from "./editor-components"
+import { Cursor, GridPoint, Hints } from "./editor-components"
 import { EditorService } from "./editor-service"
 import { ElementFactoryRegistry } from "./shapes/shape-factory"
 import { TextBoxFactory, TextBoxNode } from "./shapes/text-box-factory"
@@ -58,6 +58,8 @@ export type Cursor = {
 export class UI {
   cursor: Cursor = { col: 0, row: 0 }
   private cursorMotionCallback: (motion: Line) => void = () => {}
+
+  hints: { items: [string, string][] } = { items: [] }
 
   setCursorPosition(col: number, row: number) {
     const motion: Line = this.getCursorMotion(col, row)
@@ -136,14 +138,17 @@ export class EditorLayer implements Layer {
 
     const cursorEntity = this.entityManager.createEntity()
     const highlighterEntity = this.entityManager.createEntity()
+    const hintsEntity = this.entityManager.createEntity()
 
     this.editorService = new EditorService(
       this.document,
       this.entityManager,
-      cursorEntity,
+      this.contextNavigator,
+      cursorEntity, //TODO: move to ui entities to ui object
       this.ui,
       this.canvas,
-      highlighterEntity
+      highlighterEntity,
+      hintsEntity
     )
 
     this.factoryRegistry = new ElementFactoryRegistry(
@@ -158,7 +163,7 @@ export class EditorLayer implements Layer {
     this.staticUIRendererSystem.update()
 
     this.addCursor(cursorEntity)
-    this.render()
+    this.addHintsUI(hintsEntity)
 
     this.rootContext = new RootContext(
       this.editorService,
@@ -166,9 +171,11 @@ export class EditorLayer implements Layer {
       this.factoryRegistry
     )
     this.contextNavigator.registerContext("root", this.rootContext)
-    this.contextNavigator.navigateTo("root")
+    this.editorService.navigateToContext("root")
 
     this.selectorSystem.setHighlightCallback(this.onHighlight.bind(this))
+
+    this.render()
   }
 
   onEvent(event: Event): void {
@@ -218,6 +225,11 @@ export class EditorLayer implements Layer {
         this.entityManager.addComponent(uiEntity, uiRendererComponent)
       }
     }
+  }
+
+  private addHintsUI(entity: Entity) {
+    const uiRendererComponent = new UIRendererComponent(Hints, this.ui.hints)
+    this.entityManager.addComponent(entity, uiRendererComponent)
   }
 
   private onHighlight(entity: Entity, params: HighlightParams) {

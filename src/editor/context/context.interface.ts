@@ -26,6 +26,10 @@ export abstract class AbstractContext implements Context {
 
 export abstract class AbstractCommandContext extends AbstractContext {
   protected readonly commandResolver = new CommandResolver()
+
+  getHints(): [string, string][] {
+    return this.commandResolver.getKeybinds()
+  }
 }
 export interface ContextFactory {
   create(...args: any[]): Context

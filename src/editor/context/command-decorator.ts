@@ -104,4 +104,8 @@ export class CommandResolver {
     // Maps remember insertion order so index will always be consistent
     return [...this.commands.keys()]
   }
+
+  getKeybinds(): [string, string][] {
+    return this.keybinds
+  }
 }

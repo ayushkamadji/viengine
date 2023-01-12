@@ -9,16 +9,24 @@ import { Document, StemElement } from "./vieditor-element"
 import { SelectorComponent } from "./ecs-systems/selector-system"
 import { Geometry, isLine, isPolygon, Point } from "../lib/util/geometry"
 import { ArrowDown } from "./context/root-components"
+import { ContextNavigator } from "./context/context-navigator"
+import {
+  AbstractCommandContext,
+  Context,
+  ContextFactory,
+} from "./context/context.interface"
 
 export const HIGHLIGH_OFFSET = 20
 export class EditorService {
   constructor(
     readonly document: Document,
     private readonly entityManager: EntityManager,
+    private readonly contextNavigator: ContextNavigator,
     private readonly cursorEntity: Entity,
     private readonly ui: UI,
     private readonly canvas: Canvas,
-    private readonly highlightEntity: Entity
+    private readonly highlightEntity: Entity,
+    private readonly hintsEntity: Entity
   ) {}
 
   generateEntity(): number {
@@ -178,5 +186,21 @@ export class EditorService {
       this.getCursorRendererComponent()
     const [cursorX, cursorY] = Util.cursorColRowToCanvasXY(newCol, newRow)
     rendererComponent.setProps({ x: cursorX, y: cursorY })
+  }
+
+  navigateToContext(context: string | Context, ...args: any[]) {
+    this.contextNavigator.navigateTo(context, ...args)
+    const currentContext = this.contextNavigator.getCurrentContext()
+    if (currentContext instanceof AbstractCommandContext) {
+      const hintItems = currentContext.getHints()
+      this.ui.hints.items = hintItems
+    } else {
+      this.ui.hints.items = []
+    }
+    this.updateUI(this.hintsEntity, this.ui.hints)
+  }
+
+  registerContext(path: string, context: Context | ContextFactory) {
+    this.contextNavigator.registerContext(path, context)
   }
 }

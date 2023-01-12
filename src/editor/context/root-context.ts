@@ -14,7 +14,7 @@ const keybindsJson = {
   j: "moveDown",
   k: "moveUp",
   l: "moveRight",
-  Enter: "navToCreateNode",
+  Enter: "createNode",
 }
 const keybinds = Object.entries(keybindsJson)
 
@@ -62,9 +62,9 @@ export class RootContext extends AbstractCommandContext {
     this.editorService.showMainCursor()
   }
 
-  @Command("navToCreateNode")
+  @Command("createNode")
   private navigateToNodeCreationContext(): void {
-    this.getNavigator().navigateTo(`${"root"}/nodeCreation`)
+    this.editorService.navigateToContext(`${"root"}/nodeCreation`)
   }
 
   @Command("moveLeft")
