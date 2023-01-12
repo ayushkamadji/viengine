@@ -6,9 +6,15 @@ import "./node-creation.css"
 
 type MenuProps = BaseUIPropType & {
   items: string[]
+  selectedIndex: number
 }
 
-export const Menu: ElementFunction = ({ x, y, items }: MenuProps) => {
+export const Menu: ElementFunction = ({
+  x,
+  y,
+  items,
+  selectedIndex,
+}: MenuProps) => {
   return (
     <div
       id="node-create-menu"
@@ -17,7 +23,12 @@ export const Menu: ElementFunction = ({ x, y, items }: MenuProps) => {
       data-y={y}
     >
       {items.map((item, i) => {
-        return <div key={i}>{item}</div>
+        const highlightClass = i === selectedIndex ? "highlight" : ""
+        return (
+          <div className={highlightClass} key={i}>
+            {item}
+          </div>
+        )
       })}
     </div>
   )

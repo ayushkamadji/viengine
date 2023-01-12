@@ -1,11 +1,25 @@
 .node-create-menu {
   position: absolute;
   color: white;
-  width: 100px;
+  width: 120px;
   box-shadow: 2px 2px 4px 0 #0f08;
+  z-index: 750;
+  background-color: #555f;
+  border-radius: 8px;
 }
 
 .node-create-menu div {
-  padding: 5px;
-  background-color: #ccc8;
+  padding: 8px;
+}
+
+.node-create-menu div:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.node-create-menu div:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.node-create-menu div.highlight {
+  background-color: #0f05;
 }

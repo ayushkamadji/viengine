@@ -74,6 +74,14 @@ export class EditorService {
     return Util.cursorColRowToCanvasXY(this.ui.cursor.col, this.ui.cursor.row)
   }
 
+  updateUI(entity: Entity, props: any) {
+    const rendererComponent: UIRendererComponent = this.entityManager
+      .getEntityComponentContainer(entity)
+      .get(UIRendererComponent)
+
+    rendererComponent.setProps(props)
+  }
+
   addUIAtCursor(entity: Entity, elementFunction: ElementFunction, props: any) {
     const [x, y] = this.getCursorXY()
     this.addUIAtXY(entity, elementFunction, { ...props, x, y })
@@ -84,6 +92,12 @@ export class EditorService {
       ...props,
     })
     this.entityManager.addComponent(entity, rendererComponent)
+  }
+
+  removeUI(entity: Entity) {
+    this.entityManager
+      .getEntityComponentContainer(entity)
+      .delete(UIRendererComponent)
   }
 
   addHighlighter(entity: Entity) {

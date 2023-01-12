@@ -3,6 +3,7 @@ import { EditorService } from "../editor-service"
 import { ShapeFactory } from "./shape-factory"
 import { Command, CommandContext } from "../context/command-decorator"
 import {
+  AbstractCommandContext,
   AbstractContext,
   Context,
   emptyContext,
@@ -77,7 +78,7 @@ export class TextBoxFactory implements ShapeFactory {
     ["l", "moveRight"],
   ],
 })
-export class TextBoxEditContext extends AbstractContext {
+export class TextBoxEditContext extends AbstractCommandContext {
   private readonly insertModeContext: InsertModeContext
 
   constructor(
@@ -149,7 +150,7 @@ export class NormalModeContext extends AbstractContext {
 @CommandContext({
   keybinds: [["Escape", "exit"]],
 })
-export class InsertModeContext extends AbstractContext {
+export class InsertModeContext extends AbstractCommandContext {
   private exitContext: Context = emptyContext
 
   constructor(

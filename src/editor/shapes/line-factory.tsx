@@ -1,6 +1,6 @@
 import { Command, CommandContext } from "../context/command-decorator"
 import { ContextNavigator } from "../context/context-navigator"
-import { AbstractContext } from "../context/context.interface"
+import { AbstractCommandContext } from "../context/context.interface"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { EditorService } from "../editor-service"
 import { Point, StemElement } from "../vieditor-element"
@@ -128,7 +128,7 @@ export class LineNodeFactory implements ShapeFactory {
     ["Enter", "exit"],
   ],
 })
-export class LineEditContext extends AbstractContext {
+export class LineEditContext extends AbstractCommandContext {
   static MOVE_STEP = 10
   constructor(
     private readonly editorService: EditorService,

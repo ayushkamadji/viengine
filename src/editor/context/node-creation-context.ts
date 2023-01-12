@@ -1,6 +1,9 @@
-import { AbstractContext, Context, emptyContext } from "./context.interface"
+import {
+  AbstractCommandContext,
+  Context,
+  emptyContext,
+} from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
-import { Node } from "../vieditor-element"
 import { EditorService } from "../editor-service"
 import { Command, CommandContext } from "./command-decorator"
 import { Entity } from "../ecs/entity-component-system"
@@ -13,19 +16,23 @@ import { LineNode } from "../shapes/line-factory"
 //TODO: move to json
 const keybindsJson = {
   Escape: "exit",
-  l: "line",
+  l: "arrow",
   t: "textBox",
-  Enter: "line",
+  j: "menuDown",
+  k: "menuUp",
+  Enter: "executeCommand",
 }
 
 const keybinds = Object.entries(keybindsJson)
 
 @CommandContext({ keybinds })
-export class NodeCreationContext extends AbstractContext {
+export class NodeCreationContext extends AbstractCommandContext {
   name: string
   private exitContext: Context = emptyContext
   private menuEntity: Entity | undefined
-  private menuItems = ["exit", "createNode"] //TODO: populate from command [feat(input-menu)]
+  private selectedMenuItem = 0
+  //TODO: move filtering to command decorator config and resolver
+  private menuItemHideFilter = ["menuUp", "menuDown", "executeCommand"]
 
   constructor(
     private readonly editorService: EditorService,
@@ -38,26 +45,15 @@ export class NodeCreationContext extends AbstractContext {
   }
 
   onEntry(): void {
-    this.menuEntity = this.editorService.generateEntity()
+    if (!this.menuEntity) {
+      this.menuEntity = this.editorService.generateEntity()
+    }
+    this.selectedMenuItem = 0
     this.createMenuUI(this.menuEntity)
   }
 
   setExitContext(context: Context): void {
     this.exitContext = context
-  }
-
-  @Command("exit")
-  private exit(): void {
-    this.destroyMenu()
-    this.getNavigator().navigateTo(this.exitContext)
-  }
-
-  @Command("createNode")
-  private createNode(): void {
-    this.editorService.addElementAtCursor(
-      new Node(this.editorService.generateEntity())
-    )
-    this.exit()
   }
 
   @Command("textBox")
@@ -66,10 +62,48 @@ export class NodeCreationContext extends AbstractContext {
     this.createElementNode(TextBoxNode, text)
   }
 
-  @Command("line")
+  @Command("arrow")
   private createLine(): void {
     this.destroyMenu()
     this.createElementNode(LineNode)
+  }
+
+  @Command("exit")
+  private exit(): void {
+    this.destroyMenu()
+    this.getNavigator().navigateTo(this.exitContext)
+  }
+
+  @Command("menuUp")
+  private menuUp(): void {
+    this.selectedMenuItem = Math.max(0, this.selectedMenuItem - 1)
+    this.updateMenu()
+  }
+
+  @Command("menuDown")
+  private menuDown(): void {
+    const menuItems = this.getMenuItems()
+    this.selectedMenuItem = Math.min(
+      menuItems.length - 1,
+      this.selectedMenuItem + 1
+    )
+    this.updateMenu()
+  }
+
+  @Command("executeCommand")
+  private executeCommand(): void {
+    const commandName = this.getMenuItems()[this.selectedMenuItem]
+    const command = this.commandResolver.resolveCommand(commandName)
+    if (command) {
+      command()
+    }
+  }
+
+  private getMenuItems(): string[] {
+    const allCommands = this.commandResolver.getCommandNames()
+    return allCommands.filter((command) => {
+      return !this.menuItemHideFilter.includes(command)
+    })
   }
 
   private createElementNode(element: ElementClass, ...args: any[]) {
@@ -80,12 +114,23 @@ export class NodeCreationContext extends AbstractContext {
   }
 
   private createMenuUI(entity: Entity): void {
-    this.editorService.addUIAtCursor(entity, Menu, { items: this.menuItems })
+    this.editorService.addUIAtCursor(entity, Menu, {
+      items: this.getMenuItems(),
+      selectedIndex: this.selectedMenuItem,
+    })
+  }
+
+  private updateMenu(): void {
+    if (this.menuEntity) {
+      this.editorService.updateUI(this.menuEntity, {
+        selectedIndex: this.selectedMenuItem,
+      })
+    }
   }
 
   private destroyMenu(): void {
     if (this.menuEntity) {
-      this.editorService.removeEntity(this.menuEntity)
+      this.editorService.removeUI(this.menuEntity)
     }
   }
 }

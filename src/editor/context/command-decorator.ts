@@ -1,4 +1,4 @@
-import { Context } from "./context.interface"
+import { AbstractCommandContext } from "./context.interface"
 import { Event, KeyDownEvent } from "../../lib/event"
 
 export const COMMAND_NAME_METADATA = "commandName"
@@ -18,16 +18,15 @@ export const Command = (commandName: string) => {
   }
 }
 
-type CommandContextConfig = {
+export type CommandContextConfig = {
   keybinds: [string, string][]
 }
 
 export function CommandContext(config: CommandContextConfig) {
   const result = function _CommandContext<
-    T extends { new (...args: any[]): Context }
+    T extends { new (...args: any[]): AbstractCommandContext }
   >(ctor: T) {
     return class extends ctor {
-      private commandResolver: CommandResolver = new CommandResolver()
       constructor(...args: any[]) {
         super(...args)
         this.loadCommands()
@@ -77,7 +76,7 @@ export function CommandContext(config: CommandContextConfig) {
   return result
 }
 
-class CommandResolver {
+export class CommandResolver {
   private readonly keybinds: [string, string][] = []
   private readonly commands: Map<string, () => void> = new Map()
 
@@ -95,5 +94,14 @@ class CommandResolver {
     if (commandName) {
       return this.commands.get(commandName)
     }
+  }
+
+  resolveCommand(commandName: string): (() => void) | undefined {
+    return this.commands.get(commandName)
+  }
+
+  getCommandNames(): string[] {
+    // Maps remember insertion order so index will always be consistent
+    return [...this.commands.keys()]
   }
 }

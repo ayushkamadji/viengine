@@ -4,7 +4,11 @@ import type { Entity } from "../ecs/entity-component-system"
 import { EditorService } from "../editor-service"
 import { Command, CommandContext } from "./command-decorator"
 import { ContextNavigator } from "./context-navigator"
-import { AbstractContext, Context, ContextFactory } from "./context.interface"
+import {
+  AbstractCommandContext,
+  Context,
+  ContextFactory,
+} from "./context.interface"
 
 export class HighlightContextFactory implements ContextFactory {
   constructor(
@@ -32,7 +36,7 @@ export class HighlightContextFactory implements ContextFactory {
     ["Enter", "edit"],
   ],
 })
-export class HighlightContext extends AbstractContext {
+export class HighlightContext extends AbstractCommandContext {
   constructor(
     private readonly editorService: EditorService,
     contextNavigator: ContextNavigator,

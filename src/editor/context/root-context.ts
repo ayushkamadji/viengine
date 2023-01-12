@@ -1,4 +1,4 @@
-import { AbstractContext } from "./context.interface"
+import { AbstractCommandContext } from "./context.interface"
 import { ContextNavigator } from "./context-navigator"
 import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
@@ -19,7 +19,7 @@ const keybindsJson = {
 const keybinds = Object.entries(keybindsJson)
 
 @CommandContext({ keybinds })
-export class RootContext extends AbstractContext {
+export class RootContext extends AbstractCommandContext {
   name: string
   private readonly nodeCreationContext: NodeCreationContext
   private readonly highlightContextFactory: HighlightContextFactory
