@@ -188,7 +188,7 @@ export class EditorService {
     rendererComponent.setProps({ x: cursorX, y: cursorY })
   }
 
-  navigateToContext(context: string | Context, ...args: any[]) {
+  navigateTo(context: string | Context, ...args: any[]) {
     this.contextNavigator.navigateTo(context, ...args)
     const currentContext = this.contextNavigator.getCurrentContext()
     if (currentContext instanceof AbstractCommandContext) {
@@ -202,5 +202,14 @@ export class EditorService {
 
   registerContext(path: string, context: Context | ContextFactory) {
     this.contextNavigator.registerContext(path, context)
+  }
+
+  removeContext(path: string) {
+    this.contextNavigator.removeContext(path)
+  }
+
+  toggleHints() {
+    this.ui.hints.minimize = !this.ui.hints.minimize
+    this.updateUI(this.hintsEntity, this.ui.hints)
   }
 }

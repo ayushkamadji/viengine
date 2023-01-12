@@ -52,11 +52,23 @@
   color: #0f0;
   bottom: 20px;
   right: 20px;
-  /* width: 150px; */
   font-size: 14px;
   line-height: 1.8em;
   z-index: 1000;
   display: grid;
   grid-template-columns: 1fr 2fr;
   column-gap: 6px;
+  min-width: 150px;
+}
+
+.ui-hints.minimize {
+  padding: 8px;
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  min-width: 20px;
+  line-height: 1em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

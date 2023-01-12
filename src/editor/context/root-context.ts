@@ -1,5 +1,4 @@
 import { AbstractCommandContext } from "./context.interface"
-import { ContextNavigator } from "./context-navigator"
 import { NodeCreationContext } from "./node-creation-context"
 import { Command, CommandContext } from "./command-decorator"
 import { EditorService } from "../editor-service"
@@ -15,6 +14,7 @@ const keybindsJson = {
   k: "moveUp",
   l: "moveRight",
   Enter: "createNode",
+  "?": "toggleHints",
 }
 const keybinds = Object.entries(keybindsJson)
 
@@ -26,29 +26,26 @@ export class RootContext extends AbstractCommandContext {
 
   constructor(
     private readonly editorService: EditorService,
-    contextNavigator: ContextNavigator,
     private readonly factoryRegistry: ElementFactoryRegistry,
     name = "root"
   ) {
-    super(contextNavigator)
+    super()
     this.name = name
     this.nodeCreationContext = new NodeCreationContext(
       editorService,
-      contextNavigator,
       this.factoryRegistry,
       "nodeCreation"
     )
     this.nodeCreationContext.setExitContext(this)
-    contextNavigator.registerContext(
+    editorService.registerContext(
       `${name}/nodeCreation`,
       this.nodeCreationContext
     )
 
     this.highlightContextFactory = new HighlightContextFactory(
-      this.editorService,
-      contextNavigator
+      this.editorService
     )
-    contextNavigator.registerContext(
+    this.editorService.registerContext(
       "/root/highlight",
       this.highlightContextFactory
     )
@@ -64,7 +61,7 @@ export class RootContext extends AbstractCommandContext {
 
   @Command("createNode")
   private navigateToNodeCreationContext(): void {
-    this.editorService.navigateToContext(`${"root"}/nodeCreation`)
+    this.editorService.navigateTo(`${"root"}/nodeCreation`)
   }
 
   @Command("moveLeft")
@@ -87,6 +84,11 @@ export class RootContext extends AbstractCommandContext {
     this.moveCursor(1, 0)
   }
 
+  @Command("toggleHints")
+  private toggleHints(): void {
+    this.editorService.toggleHints()
+  }
+
   private moveCursor(deltaX: number, deltaY: number): void {
     this.editorService.showMainCursor()
     const { col: currentCol, row: currentRow } =
@@ -98,6 +100,6 @@ export class RootContext extends AbstractCommandContext {
   }
 
   onHighlight(entity: Entity, params: HighlightParams): void {
-    this.getNavigator().navigateTo("/root/highlight", entity, params)
+    this.editorService.navigateTo("/root/highlight", entity, params)
   }
 }

@@ -3,7 +3,6 @@ import {
   Context,
   emptyContext,
 } from "./context.interface"
-import { ContextNavigator } from "./context-navigator"
 import { EditorService } from "../editor-service"
 import { Command, CommandContext } from "./command-decorator"
 import { Entity } from "../ecs/entity-component-system"
@@ -34,11 +33,10 @@ export class NodeCreationContext extends AbstractCommandContext {
 
   constructor(
     private readonly editorService: EditorService,
-    contextNavigator: ContextNavigator,
     private readonly factoryRegistry: ElementFactoryRegistry,
     name: string
   ) {
-    super(contextNavigator)
+    super()
     this.name = name
   }
 
@@ -69,7 +67,7 @@ export class NodeCreationContext extends AbstractCommandContext {
   @Command("exit")
   private exit(): void {
     this.destroyMenu()
-    this.getNavigator().navigateTo(this.exitContext)
+    this.editorService.navigateTo(this.exitContext)
   }
 
   @Command("menuUp")

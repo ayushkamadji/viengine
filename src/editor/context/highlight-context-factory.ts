@@ -3,7 +3,6 @@ import type { HighlightParams } from "../ecs-systems/selector-system"
 import type { Entity } from "../ecs/entity-component-system"
 import { EditorService } from "../editor-service"
 import { Command, CommandContext } from "./command-decorator"
-import { ContextNavigator } from "./context-navigator"
 import {
   AbstractCommandContext,
   Context,
@@ -11,19 +10,10 @@ import {
 } from "./context.interface"
 
 export class HighlightContextFactory implements ContextFactory {
-  constructor(
-    private readonly editorService: EditorService,
-    private readonly contextNavigator: ContextNavigator
-  ) {}
+  constructor(private readonly editorService: EditorService) {}
   create(entity: Entity, params: HighlightParams): Context {
     const name = `/root/highlight/${entity}`
-    return new HighlightContext(
-      this.editorService,
-      this.contextNavigator,
-      name,
-      entity,
-      params
-    )
+    return new HighlightContext(this.editorService, name, entity, params)
   }
 }
 
@@ -39,12 +29,11 @@ export class HighlightContextFactory implements ContextFactory {
 export class HighlightContext extends AbstractCommandContext {
   constructor(
     private readonly editorService: EditorService,
-    contextNavigator: ContextNavigator,
     readonly name,
     private readonly entity: Entity,
     private readonly highlightParams: HighlightParams
   ) {
-    super(contextNavigator)
+    super()
   }
 
   @Command("moveLeft")
@@ -71,12 +60,12 @@ export class HighlightContext extends AbstractCommandContext {
     const { col, row } = this.highlightParams.exitPositions[direction]
     // this.editorService.cursorExitEntityGeometry(this.entity, direction)
     this.editorService.setCursorPosition(col, row)
-    this.getNavigator().navigateTo("root")
+    this.editorService.navigateTo("root")
   }
 
   @Command("edit")
   private edit(): void {
-    this.getNavigator().navigateTo(`root/document/${this.entity}/edit`)
+    this.editorService.navigateTo(`root/document/${this.entity}/edit`)
   }
 
   onEntry() {

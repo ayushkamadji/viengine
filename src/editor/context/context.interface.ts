@@ -1,6 +1,5 @@
 import { Event } from "../../lib/event"
 import { CommandResolver } from "./command-decorator"
-import { ContextNavigator } from "./context-navigator"
 
 export interface Context {
   name: string
@@ -11,12 +10,7 @@ export interface Context {
 }
 
 export abstract class AbstractContext implements Context {
-  protected getNavigator: () => ContextNavigator
   name = ""
-
-  constructor(contextNavigator: ContextNavigator) {
-    this.getNavigator = () => contextNavigator
-  }
 
   onEvent(_event: Event): void {}
   onEntry(): void {}

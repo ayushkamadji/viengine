@@ -59,7 +59,10 @@ export class UI {
   cursor: Cursor = { col: 0, row: 0 }
   private cursorMotionCallback: (motion: Line) => void = () => {}
 
-  hints: { items: [string, string][] } = { items: [] }
+  hints: { items: [string, string][]; minimize: boolean } = {
+    items: [],
+    minimize: false,
+  }
 
   setCursorPosition(col: number, row: number) {
     const motion: Line = this.getCursorMotion(col, row)
@@ -151,10 +154,7 @@ export class EditorLayer implements Layer {
       hintsEntity
     )
 
-    this.factoryRegistry = new ElementFactoryRegistry(
-      this.editorService,
-      this.contextNavigator
-    )
+    this.factoryRegistry = new ElementFactoryRegistry(this.editorService)
 
     this.factoryRegistry.registerFactory(TextBoxNode, TextBoxFactory)
     this.factoryRegistry.registerFactory(LineNode, LineNodeFactory)
@@ -165,13 +165,9 @@ export class EditorLayer implements Layer {
     this.addCursor(cursorEntity)
     this.addHintsUI(hintsEntity)
 
-    this.rootContext = new RootContext(
-      this.editorService,
-      this.contextNavigator,
-      this.factoryRegistry
-    )
+    this.rootContext = new RootContext(this.editorService, this.factoryRegistry)
     this.contextNavigator.registerContext("root", this.rootContext)
-    this.editorService.navigateToContext("root")
+    this.editorService.navigateTo("root")
 
     this.selectorSystem.setHighlightCallback(this.onHighlight.bind(this))
 

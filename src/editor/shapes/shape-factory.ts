@@ -1,4 +1,3 @@
-import { ContextNavigator } from "../context/context-navigator"
 import { Element } from "../vieditor-element"
 import { EditorService } from "../editor-service"
 
@@ -10,20 +9,13 @@ export interface ShapeFactory {
 
 export type ElementClass = { new (...args: any[]): Element }
 export type FactoryClass = {
-  new (
-    editorService: EditorService,
-    contextNavigator: ContextNavigator,
-    ...args: any[]
-  ): ShapeFactory
+  new (editorService: EditorService, ...args: any[]): ShapeFactory
 }
 
 export class ElementFactoryRegistry {
   private factoryMap: Map<ElementClass, ShapeFactory> = new Map()
 
-  constructor(
-    private readonly editorService: EditorService,
-    private readonly contextNavigator: ContextNavigator
-  ) {}
+  constructor(private readonly editorService: EditorService) {}
 
   registerFactory(
     elementClass: ElementClass,
@@ -32,7 +24,7 @@ export class ElementFactoryRegistry {
   ): void {
     this.factoryMap.set(
       elementClass,
-      new factoryClass(this.editorService, this.contextNavigator, ...args)
+      new factoryClass(this.editorService, ...args)
     )
   }
 

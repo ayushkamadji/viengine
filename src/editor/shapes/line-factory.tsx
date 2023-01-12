@@ -1,5 +1,4 @@
 import { Command, CommandContext } from "../context/command-decorator"
-import { ContextNavigator } from "../context/context-navigator"
 import { AbstractCommandContext } from "../context/context.interface"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { EditorService } from "../editor-service"
@@ -94,10 +93,7 @@ export class LineNodeFactory implements ShapeFactory {
   editorElement = LineNode
   name = "line-node-factory"
 
-  constructor(
-    private readonly editorService: EditorService,
-    private readonly contextNavigator: ContextNavigator
-  ) {}
+  constructor(private readonly editorService: EditorService) {}
 
   create(): void {
     const entity = this.editorService.generateEntity()
@@ -107,12 +103,11 @@ export class LineNodeFactory implements ShapeFactory {
 
     const editContext = new LineEditContext(
       this.editorService,
-      this.contextNavigator,
       docElement,
       `root/document/${entity}/edit`
     )
-    this.contextNavigator.registerContext(editContext.name, editContext)
-    this.contextNavigator.navigateTo(`root/document/${entity}/edit`)
+    this.editorService.registerContext(editContext.name, editContext)
+    this.editorService.navigateTo(`root/document/${entity}/edit`)
   }
 }
 
@@ -132,11 +127,10 @@ export class LineEditContext extends AbstractCommandContext {
   static MOVE_STEP = 10
   constructor(
     private readonly editorService: EditorService,
-    private readonly contextNavigator: ContextNavigator,
     private readonly line: LineNode,
     public name: string
   ) {
-    super(contextNavigator)
+    super()
   }
 
   @Command("moveP2up")
@@ -197,13 +191,13 @@ export class LineEditContext extends AbstractCommandContext {
 
   @Command("exit")
   private exit(): void {
-    this.contextNavigator.navigateTo("root")
+    this.editorService.navigateTo("root")
   }
 
   @Command("cancel")
   private cancel(): void {
     this.editorService.removeElement(this.line)
-    this.contextNavigator.removeContext(this.name)
+    this.editorService.removeContext(this.name)
     this.exit()
   }
 

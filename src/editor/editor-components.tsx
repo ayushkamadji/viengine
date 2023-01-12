@@ -43,17 +43,27 @@ export const SVGNode: SVGElementFunction<SVGRectElement> = (
 
 export const Hints: ElementFunction = ({
   items,
+  minimize,
 }: {
   items: [string, string][]
+  minimize: boolean
 }) => {
-  return (
-    <div className="ui-hints">
-      {items &&
-        items.flat().map((keyOrValue, index) => (
-          <div key={index} className="ui-hints-item">
-            {keyOrValue}
-          </div>
-        ))}
-    </div>
-  )
+  if (minimize) {
+    return (
+      <div className="ui-hints minimize">
+        <div>?</div>
+      </div>
+    )
+  } else {
+    return (
+      <div className="ui-hints">
+        {items &&
+          items.flat().map((keyOrValue, index) => (
+            <div key={index} className="ui-hints-item">
+              {keyOrValue}
+            </div>
+          ))}
+      </div>
+    )
+  }
 }

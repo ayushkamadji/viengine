@@ -1,4 +1,3 @@
-import { ContextNavigator } from "../context/context-navigator"
 import { EditorService } from "../editor-service"
 import { ShapeFactory } from "./shape-factory"
 import { Command, CommandContext } from "../context/command-decorator"
@@ -46,10 +45,7 @@ export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
   name = "TextBox"
 
-  constructor(
-    private readonly editorService: EditorService,
-    private readonly contextNavigator: ContextNavigator
-  ) {}
+  constructor(private readonly editorService: EditorService) {}
 
   create(text = "") {
     const entity = this.editorService.generateEntity()
@@ -59,12 +55,11 @@ export class TextBoxFactory implements ShapeFactory {
 
     const editContext = new TextBoxEditContext(
       this.editorService,
-      this.contextNavigator,
       docElement,
       `root/document/${entity}/edit`
     )
-    this.contextNavigator.registerContext(editContext.name, editContext)
-    this.contextNavigator.navigateTo(`root/document/${entity}/edit/text/insert`)
+    this.editorService.registerContext(editContext.name, editContext)
+    this.editorService.navigateTo(`root/document/${entity}/edit/text/insert`)
   }
 }
 
@@ -83,19 +78,17 @@ export class TextBoxEditContext extends AbstractCommandContext {
 
   constructor(
     private readonly editorService: EditorService,
-    contextNavigator: ContextNavigator,
     private docElement: TextBoxNode,
     public name: string
   ) {
-    super(contextNavigator)
+    super()
     this.insertModeContext = new InsertModeContext(
       this.editorService,
-      this.getNavigator(),
       this.docElement,
       `root/document/${docElement.entityID}/edit/text/insert`
     )
     this.insertModeContext.setExitContext(this)
-    this.getNavigator().registerContext(
+    this.editorService.registerContext(
       this.insertModeContext.name,
       this.insertModeContext
     )
@@ -107,7 +100,7 @@ export class TextBoxEditContext extends AbstractCommandContext {
 
   @Command("insert")
   private insert(): void {
-    this.getNavigator().navigateTo(this.insertModeContext.name)
+    this.editorService.navigateTo(this.insertModeContext.name)
   }
 
   @Command("moveLeft")
@@ -132,18 +125,15 @@ export class TextBoxEditContext extends AbstractCommandContext {
 
   @Command("exit")
   private exit(): void {
-    this.getNavigator().navigateTo("root")
+    this.editorService.navigateTo("root")
   }
 }
 
 export class NormalModeContext extends AbstractContext {
   name = "NormalModeContext"
 
-  constructor(
-    private readonly editorService: EditorService,
-    contextNavigator: ContextNavigator
-  ) {
-    super(contextNavigator)
+  constructor(private readonly editorService: EditorService) {
+    super()
   }
 }
 
@@ -155,11 +145,10 @@ export class InsertModeContext extends AbstractCommandContext {
 
   constructor(
     private readonly editorService: EditorService,
-    contextNavigator: ContextNavigator,
     private docElement: TextElement,
     public name: string
   ) {
-    super(contextNavigator)
+    super()
   }
 
   onEvent(event: Event) {
@@ -188,7 +177,7 @@ export class InsertModeContext extends AbstractCommandContext {
 
   @Command("exit")
   private exit(): void {
-    this.getNavigator().navigateTo(this.exitContext)
+    this.editorService.navigateTo(this.exitContext)
   }
 
   setExitContext(context: Context) {
