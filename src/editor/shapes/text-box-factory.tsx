@@ -5,6 +5,7 @@ import { AbstractCommandContext } from "../context/context.interface"
 import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
+import { MoveContext } from "./edit-context/move-context"
 import { InsertModeContext } from "./InsertModeContext"
 
 export class TextBoxFactory implements ShapeFactory {
@@ -48,14 +49,12 @@ export class TextBoxFactory implements ShapeFactory {
   keybinds: [
     ["Escape", "exit"],
     ["i", "insert"],
-    ["h", "moveLeft"],
-    ["j", "moveDown"],
-    ["k", "moveUp"],
-    ["l", "moveRight"],
+    ["m", "move"],
   ],
 })
 export class TextBoxEditContext extends AbstractCommandContext {
   private readonly insertModeContext: InsertModeContext
+  private readonly moveContext: MoveContext
 
   constructor(
     private readonly editorService: EditorService,
@@ -63,6 +62,14 @@ export class TextBoxEditContext extends AbstractCommandContext {
     public name: string
   ) {
     super()
+    this.moveContext = new MoveContext(
+      this.editorService,
+      this.docElement,
+      `root/document/${docElement.entityID}/edit/move`
+    )
+    this.moveContext.setExitContext(this)
+    this.editorService.registerContext(this.moveContext.name, this.moveContext)
+
     this.insertModeContext = new InsertModeContext(
       this.editorService,
       this.docElement,
@@ -75,33 +82,16 @@ export class TextBoxEditContext extends AbstractCommandContext {
     )
   }
 
-  onEntry(): void {
-    console.log("text box edit on entry")
+  onEntry(): void {}
+
+  @Command("move")
+  private move(): void {
+    this.editorService.navigateTo(this.moveContext)
   }
 
   @Command("insert")
   private insert(): void {
     this.editorService.navigateTo(this.insertModeContext.name)
-  }
-
-  @Command("moveLeft")
-  private moveLeft() {
-    this.editorService.moveElement(this.docElement, -1, 0)
-  }
-
-  @Command("moveDown")
-  private moveDown() {
-    this.editorService.moveElement(this.docElement, 0, 1)
-  }
-
-  @Command("moveUp")
-  private moveUp() {
-    this.editorService.moveElement(this.docElement, 0, -1)
-  }
-
-  @Command("moveRight")
-  private moveRight() {
-    this.editorService.moveElement(this.docElement, 1, 0)
   }
 
   @Command("exit")

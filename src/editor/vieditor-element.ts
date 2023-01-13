@@ -1,7 +1,4 @@
-import { SVGNode } from "./editor-components"
 import { ElementFunction } from "./ecs-systems/renderer-element"
-import { SVGProps } from "react"
-import { EditorLayer } from "./editor"
 import { Geometry } from "../lib/util/geometry"
 import { Type } from "class-transformer"
 import { TextBoxNode } from "./shapes/text-box-factory"
@@ -31,37 +28,6 @@ type PropsWithText = {
 
 export interface TextElement extends StemElement {
   props: PropsWithText
-}
-
-export class Node implements StemElement {
-  static _jsxElementFunction = SVGNode
-  name = "node"
-  text = ""
-  position: Point = { x: 0, y: 0 }
-  props: SVGProps<SVGRectElement> = {
-    x: 0,
-    y: 0,
-    width: EditorLayer.RECT_SIZE,
-    height: EditorLayer.RECT_SIZE,
-    stroke: "white",
-    transform: `translate(${this.position.x}, ${this.position.y})`,
-  }
-
-  constructor(public entityID: number) {
-    this.text = entityID.toString()
-  }
-  children?: Element[] | undefined
-
-  setPosition(x: number, y: number): void {
-    this.props.x = x
-    this.props.y = y
-    this.position.x = x
-    this.position.y = y
-  }
-
-  get jsxElementFunction() {
-    return Node._jsxElementFunction
-  }
 }
 
 export class Document implements Element {

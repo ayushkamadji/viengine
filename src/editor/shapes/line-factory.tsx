@@ -3,6 +3,7 @@ import { AbstractCommandContext } from "../context/context.interface"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { EditorService } from "../editor-service"
 import { Point, StemElement } from "../vieditor-element"
+import { MoveContext } from "./edit-context/move-context"
 import { ShapeFactory } from "./shape-factory"
 
 export const Line: ElementFunction = ({ gProps, lineProps }) => {
@@ -128,6 +129,7 @@ export class LineNodeFactory implements ShapeFactory {
 
 @CommandContext({
   keybinds: [
+    ["m", "move"],
     ["h", "moveP2left"],
     ["j", "moveP2down"],
     ["k", "moveP2up"],
@@ -140,12 +142,26 @@ export class LineNodeFactory implements ShapeFactory {
 })
 export class LineEditContext extends AbstractCommandContext {
   static MOVE_STEP = 10
+  private readonly moveContext: MoveContext
+
   constructor(
     private readonly editorService: EditorService,
     private readonly line: LineNode,
     public name: string
   ) {
     super()
+    this.moveContext = new MoveContext(
+      this.editorService,
+      this.line,
+      `root/document/${line.entityID}/edit/move`
+    )
+    this.moveContext.setExitContext(this)
+    this.editorService.registerContext(this.moveContext.name, this.moveContext)
+  }
+
+  @Command("move")
+  private move(): void {
+    this.editorService.navigateTo(this.moveContext.name)
   }
 
   @Command("moveP2up")
@@ -201,7 +217,10 @@ export class LineEditContext extends AbstractCommandContext {
 
   private setProps(props: LineNode["props"]): void {
     this.line.props = props
-    this.editorService.setElementProps(this.line.entityID, this.line.props)
+    this.editorService.setElementCanvasProps(
+      this.line.entityID,
+      this.line.props
+    )
   }
 
   @Command("exit")

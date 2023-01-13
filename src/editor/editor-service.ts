@@ -179,7 +179,7 @@ export class EditorService {
     rendererComponent.setProps({ hidden: "" })
   }
 
-  setElementProps(entity: Entity, props: any) {
+  setElementCanvasProps(entity: Entity, props: any) {
     const rendererComponent: CanvasRendererComponent = this.entityManager
       .getEntityComponentContainer(entity)
       .get(CanvasRendererComponent)
@@ -204,7 +204,7 @@ export class EditorService {
       x + colDelta * EditorLayer.GRID_GAP,
       y + rowDelta * EditorLayer.GRID_GAP
     )
-    this.setElementProps(element.entityID, element.props)
+    this.setElementCanvasProps(element.entityID, element.props)
 
     const rendererComponent: UIRendererComponent =
       this.getCursorRendererComponent()

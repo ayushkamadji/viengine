@@ -58,7 +58,7 @@ export class InsertModeContext extends AbstractCommandContext {
 
   private updateText(text: string) {
     this.docElement.props.text = text
-    this.editorService.setElementProps(this.docElement.entityID, {
+    this.editorService.setElementCanvasProps(this.docElement.entityID, {
       text,
     })
   }
