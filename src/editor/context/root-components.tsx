@@ -69,3 +69,11 @@ export const ArrowDown = ({ x, y }: BaseUIPropType) => {
     </div>
   )
 }
+
+export const MoveIcon = ({ x, y }: BaseUIPropType) => {
+  return (
+    <div id="down-arrow" data-x={x} data-y={y}>
+      &#x2725;
+    </div>
+  )
+}

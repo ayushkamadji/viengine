@@ -7,6 +7,8 @@ import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { MoveContext } from "./edit-context/move-context"
 import { InsertModeContext } from "./InsertModeContext"
+import { TextBoxResizeContext } from "./edit-context/resize-context"
+import { Entity } from "../ecs/entity-component-system"
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
@@ -47,14 +49,17 @@ export class TextBoxFactory implements ShapeFactory {
 
 @CommandContext({
   keybinds: [
-    ["Escape", "exit"],
     ["i", "insert"],
     ["m", "move"],
+    ["r", "resize"],
+    ["Escape", "exit"],
   ],
 })
 export class TextBoxEditContext extends AbstractCommandContext {
   private readonly insertModeContext: InsertModeContext
   private readonly moveContext: MoveContext
+  private readonly resizeContext: TextBoxResizeContext
+  private highlightEntity: Entity | undefined
 
   constructor(
     private readonly editorService: EditorService,
@@ -80,9 +85,27 @@ export class TextBoxEditContext extends AbstractCommandContext {
       this.insertModeContext.name,
       this.insertModeContext
     )
+
+    this.resizeContext = new TextBoxResizeContext(
+      this.editorService,
+      this.docElement,
+      `root/document/${docElement.entityID}/edit/resize`
+    )
+    this.resizeContext.setExitContext(this)
+    this.editorService.registerContext(
+      this.resizeContext.name,
+      this.resizeContext
+    )
   }
 
-  onEntry(): void {}
+  onEntry(): void {
+    this.highlightEntity = this.editorService.generateEntity()
+    this.editorService.addGizmo(this.highlightEntity, HighlightPolygon, {
+      points: this.docElement.geometryFn(),
+      x: this.docElement.position.x,
+      y: this.docElement.position.y,
+    })
+  }
 
   @Command("move")
   private move(): void {
@@ -91,12 +114,19 @@ export class TextBoxEditContext extends AbstractCommandContext {
 
   @Command("insert")
   private insert(): void {
-    this.editorService.navigateTo(this.insertModeContext.name)
+    this.editorService.navigateTo(this.insertModeContext)
+  }
+
+  @Command("resize")
+  private resize(): void {
+    this.editorService.navigateTo(this.resizeContext)
   }
 
   @Command("exit")
   private exit(): void {
     this.editorService.navigateTo("root")
+    if (this.highlightEntity)
+      this.editorService.removeEntity(this.highlightEntity)
   }
 }
 
@@ -163,6 +193,15 @@ export class TextBoxNode implements TextElement {
     return [p1, p2, p3, p4]
   }
 
+  setSize(width: number, height: number) {
+    this.props.width = width
+    this.props.height = height
+    this.props.rectProps.width = width
+    this.props.rectProps.height = height
+    this.props.textProps.x = width / 2
+    this.props.textProps.y = height / 2
+  }
+
   setPosition(x: number, y: number) {
     this.props.transform = `translate(${x}, ${y})`
     this.position = { x, y }
@@ -171,4 +210,17 @@ export class TextBoxNode implements TextElement {
   setProps(props: any) {
     this.props = { ...this.props, ...props }
   }
+}
+
+const HighlightPolygon = ({ points }: { points: Point[] }) => {
+  return (
+    <g>
+      <polygon
+        points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+        fill="none"
+        stroke="blue"
+        strokeDasharray="10,10"
+      />
+    </g>
+  )
 }

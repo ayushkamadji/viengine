@@ -23,6 +23,7 @@ export class HighlightContextFactory implements ContextFactory {
     ["j", "moveDown"],
     ["k", "moveUp"],
     ["l", "moveRight"],
+    ["d", "delete"],
     ["Enter", "edit"],
   ],
 })
@@ -58,14 +59,23 @@ export class HighlightContext extends AbstractCommandContext {
 
   private move(direction: Direction): void {
     const { col, row } = this.highlightParams.exitPositions[direction]
-    // this.editorService.cursorExitEntityGeometry(this.entity, direction)
     this.editorService.setCursorPosition(col, row)
-    this.editorService.navigateTo("root")
+    this.exit()
   }
 
   @Command("edit")
   private edit(): void {
     this.editorService.navigateTo(`root/document/${this.entity}/edit`)
+  }
+
+  @Command("delete")
+  private delete(): void {
+    this.editorService.removeEntity(this.entity)
+    this.exit()
+  }
+
+  private exit() {
+    this.editorService.navigateTo("root")
   }
 
   onEntry() {

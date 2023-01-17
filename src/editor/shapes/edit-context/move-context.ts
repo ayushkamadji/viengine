@@ -4,6 +4,7 @@ import {
   Context,
   emptyContext,
 } from "../../context/context.interface"
+import { MoveIcon } from "../../context/root-components"
 import { EditorService } from "../../editor-service"
 import type { StemElement } from "../../vieditor-element"
 
@@ -29,22 +30,22 @@ export class MoveContext extends AbstractCommandContext {
 
   @Command("moveLeft")
   private moveLeft() {
-    this.editorService.moveElement(this.element, -1, 0)
+    this.editorService.moveElement(this.element, -0.25, 0)
   }
 
   @Command("moveDown")
   private moveDown() {
-    this.editorService.moveElement(this.element, 0, 1)
+    this.editorService.moveElement(this.element, 0, 0.25)
   }
 
   @Command("moveUp")
   private moveUp() {
-    this.editorService.moveElement(this.element, 0, -1)
+    this.editorService.moveElement(this.element, 0, -0.25)
   }
 
   @Command("moveRight")
   private moveRight() {
-    this.editorService.moveElement(this.element, 1, 0)
+    this.editorService.moveElement(this.element, 0.25, 0)
   }
 
   // TODO: Navigational commands should be abstracted to abstract class
@@ -55,5 +56,13 @@ export class MoveContext extends AbstractCommandContext {
 
   setExitContext(context: Context) {
     this._exitContext = context
+  }
+
+  onEntry() {
+    this.editorService.addHighlighter(this.element.entityID, MoveIcon)
+  }
+
+  onExit() {
+    this.editorService.removeHighlighter()
   }
 }

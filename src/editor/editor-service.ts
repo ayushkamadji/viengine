@@ -132,7 +132,10 @@ export class EditorService {
       .delete(UIRendererComponent)
   }
 
-  addHighlighter(entity: Entity) {
+  addHighlighter(
+    entity: Entity,
+    highlighterFunction: ElementFunction = ArrowDown
+  ) {
     const selectorComponent: SelectorComponent = this.entityManager
       .getEntityComponentContainer(entity)
       .get(SelectorComponent)
@@ -147,11 +150,24 @@ export class EditorService {
     const yxSortedPoints = xSortedPoints.sort((a, b) => a.y - b.y)
     const { x, y } = yxSortedPoints[0]
 
-    const rendererComponent = new UIRendererComponent(ArrowDown, {
+    const rendererComponent = new UIRendererComponent(highlighterFunction, {
       x,
       y: y - HIGHLIGH_OFFSET,
     })
     this.entityManager.addComponent(this.highlightEntity, rendererComponent)
+  }
+
+  private moveHighlighter(x: number, y: number) {
+    const rendererComponent: UIRendererComponent =
+      this.getHighlighterRendererComponent()
+
+    rendererComponent.setProps({ x, y: y - HIGHLIGH_OFFSET })
+  }
+
+  private getHighlighterRendererComponent(): UIRendererComponent {
+    return this.entityManager
+      .getEntityComponentContainer(this.highlightEntity)
+      .get(UIRendererComponent)
   }
 
   removeHighlighter() {
@@ -198,18 +214,18 @@ export class EditorService {
     const newCol = col + colDelta
     const newRow = row + rowDelta
     this.ui.adjustCursorPosition(newCol, newRow)
-
-    const { x, y } = element.position
-    element.setPosition(
-      x + colDelta * EditorLayer.GRID_GAP,
-      y + rowDelta * EditorLayer.GRID_GAP
-    )
-    this.setElementCanvasProps(element.entityID, element.props)
-
     const rendererComponent: UIRendererComponent =
       this.getCursorRendererComponent()
     const [cursorX, cursorY] = Util.cursorColRowToCanvasXY(newCol, newRow)
     rendererComponent.setProps({ x: cursorX, y: cursorY })
+
+    const { x, y } = element.position
+    const newPosX = x + colDelta * EditorLayer.GRID_GAP
+    const newPosY = y + rowDelta * EditorLayer.GRID_GAP
+    element.setPosition(newPosX, newPosY)
+    this.setElementCanvasProps(element.entityID, element.props)
+
+    this.moveHighlighter(newPosX, newPosY)
   }
 
   navigateTo(context: string | Context, ...args: any[]) {
@@ -289,5 +305,13 @@ export class EditorService {
         await this.systemUtil.writeFile(filename, svgDocString)
       }
     }
+  }
+
+  addGizmo(entity: Entity, elementFn: ElementFunction, props: any) {
+    const canvasRendererComponent = new CanvasRendererComponent(
+      elementFn,
+      props
+    )
+    this.entityManager.addComponent(entity, canvasRendererComponent)
   }
 }

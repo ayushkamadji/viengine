@@ -136,8 +136,7 @@ export class LineNodeFactory implements ShapeFactory {
     ["l", "moveP2right"],
     ["e", "toggleEndMarker"],
     ["s", "toggleStartMarker"],
-    ["Escape", "cancel"],
-    ["Enter", "exit"],
+    ["Escape", "exit"],
   ],
 })
 export class LineEditContext extends AbstractCommandContext {

@@ -121,8 +121,8 @@ export class RootContext extends AbstractCommandContext {
     const { col: currentCol, row: currentRow } =
       this.editorService.getCursorPosition()
     this.editorService.setCursorPosition(
-      currentCol + deltaX,
-      currentRow + deltaY
+      Math.round(currentCol + deltaX),
+      Math.round(currentRow + deltaY)
     )
   }
 

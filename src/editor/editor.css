@@ -25,7 +25,7 @@
 
 #down-arrow {
   position: absolute;
-  color: #0f0;
+  color: #f0f;
   animation: blink 1.6s steps(2, jump-none) infinite;
   z-index: 500;
 }
