@@ -22,6 +22,7 @@ specifiers:
   '@vijsx/jsx-runtime': link:src\lib\vi-jsx
   babel-loader: ^9.1.0
   babel-plugin-transform-typescript-metadata: ^0.3.2
+  class-transformer: ^0.5.1
   commitizen: ^4.2.5
   css-loader: ^6.7.2
   cz-conventional-changelog: ^3.3.0
@@ -52,6 +53,7 @@ specifiers:
 
 dependencies:
   '@vijsx/jsx-runtime': link:src/lib/vi-jsx
+  class-transformer: 0.5.1
   d3-polygon: 3.0.1
   react: 18.2.0
 
@@ -2808,6 +2810,10 @@ packages:
     resolution: {integrity: sha512-p3KULyQg4S7NIHixdwbGX+nFHkoBiA4YQmyWtjb8XngSKV124nJmRysgAeujbUVb15vh+RvFUfCPqU7rXk+hZg==}
     engines: {node: '>=6.0'}
     dev: true
+
+  /class-transformer/0.5.1:
+    resolution: {integrity: sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==}
+    dev: false
 
   /clean-css/5.3.1:
     resolution: {integrity: sha512-lCr8OHhiWCTw4v8POJovCoh4T7I9U11yVsPjMWWnnMmp9ZowCxyad1Pathle/9HjaDp+fdQKjO9fQydE6RHTZg==}

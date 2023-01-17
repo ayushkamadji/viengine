@@ -74,6 +74,7 @@
   },
   "dependencies": {
     "@vijsx/jsx-runtime": "link:src\\lib\\vi-jsx",
+    "class-transformer": "^0.5.1",
     "d3-polygon": "^3.0.1",
     "react": "^18.2.0"
   },

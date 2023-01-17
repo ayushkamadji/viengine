@@ -15,9 +15,12 @@ import {
   Context,
   ContextFactory,
 } from "./context/context.interface"
+import { instanceToPlain, plainToInstance } from "class-transformer"
+import { ElementClass, ElementFactoryRegistry } from "./shapes/shape-factory"
 
 export const HIGHLIGH_OFFSET = 20
 export class EditorService {
+  private readonly factoryRegistry: ElementFactoryRegistry
   constructor(
     readonly document: Document,
     private readonly entityManager: EntityManager,
@@ -27,7 +30,9 @@ export class EditorService {
     private readonly canvas: Canvas,
     private readonly highlightEntity: Entity,
     private readonly hintsEntity: Entity
-  ) {}
+  ) {
+    this.factoryRegistry = new ElementFactoryRegistry(this) // FIXME: circular dep
+  }
 
   generateEntity(): number {
     return this.entityManager.createEntity()
@@ -51,10 +56,30 @@ export class EditorService {
   }
 
   addElementAtCursor(element: StemElement) {
-    this.canvas.document.addElement(element)
-
     const [x, y] = this.getCursorXY()
     element.setPosition(x, y)
+
+    this.addElement(element)
+    // this.canvas.document.addElement(element)
+    // if (element.jsxElementFunction) {
+    //   const entity: Entity = element.entityID
+
+    //   const canvasRendererComponent: CanvasRendererComponent =
+    //     new CanvasRendererComponent(element.jsxElementFunction, element.props)
+
+    //   this.entityManager.addComponent(entity, canvasRendererComponent)
+    // }
+
+    // if (element.geometryFn) {
+    //   this.entityManager.addComponent(
+    //     element.entityID,
+    //     new SelectorComponent(element.geometryFn)
+    //   )
+    // }
+  }
+
+  addElement(element: StemElement) {
+    this.canvas.document.addElement(element)
 
     if (element.jsxElementFunction) {
       const entity: Entity = element.entityID
@@ -212,4 +237,88 @@ export class EditorService {
     this.ui.hints.minimize = !this.ui.hints.minimize
     this.updateUI(this.hintsEntity, this.ui.hints)
   }
+
+  __printDocumentJSON() {
+    const plainObj = instanceToPlain(this.document, {
+      excludePrefixes: ["geometryFn", "jsxElementFunction"],
+    })
+    return JSON.stringify(plainObj)
+  }
+
+  __debugDocument() {
+    const docJson = this.__printDocumentJSON()
+    const result = plainToInstance(Document, JSON.parse(docJson))
+    return result
+  }
+
+  __loadDoc() {
+    const savedDoc = plainToInstance(Document, JSON.parse(docJsonSaved))
+    for (const childElement of savedDoc.children) {
+      this.__loadElement(childElement)
+    }
+  }
+
+  private __loadElement(element: StemElement) {
+    const elementCtor = element.constructor as ElementClass
+    const factory = this.factoryRegistry.getFactory(elementCtor)
+    if (factory) {
+      factory.load(element)
+    }
+  }
+
+  getFactoryRegistry() {
+    return this.factoryRegistry
+  }
 }
+
+const docJsonSaved = `{
+  "entityID": 0,
+  "name": "document",
+  "children": [
+    {
+      "name": "text-box-node",
+      "position": { "x": 118, "y": 118 },
+      "props": {
+        "x": 0,
+        "y": 0,
+        "transform": "translate(118, 118)",
+        "width": 220,
+        "height": 100,
+        "text": "hello world",
+        "rectProps": {
+          "x": 0,
+          "y": 0,
+          "width": 220,
+          "height": 100,
+          "stroke": "white"
+        },
+        "textProps": {
+          "x": 110,
+          "y": 50,
+          "fill": "white",
+          "alignment-baseline": "middle",
+          "text-anchor": "middle"
+        }
+      },
+      "entityID": 744
+    },
+    {
+      "props": {
+        "gProps": { "transform": "translate(398, 238)" },
+        "lineProps": {
+          "x1": 0,
+          "y1": 0,
+          "x2": 120,
+          "y2": 80,
+          "stroke-width": 2,
+          "stroke": "white",
+          "marker-end": "url(#end-arrowhead)"
+        }
+      },
+      "position": { "x": 398, "y": 238 },
+      "entityID": 745,
+      "name": "line-node"
+    }
+  ]
+}
+`

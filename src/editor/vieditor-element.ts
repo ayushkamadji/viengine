@@ -3,6 +3,9 @@ import { ElementFunction } from "./ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { EditorLayer } from "./editor"
 import { Geometry } from "../lib/util/geometry"
+import { Type } from "class-transformer"
+import { TextBoxNode } from "./shapes/text-box-factory"
+import { LineNode } from "./shapes/line-factory"
 
 export interface Element {
   readonly entityID: number
@@ -12,12 +15,14 @@ export interface Element {
 
 export type Point = { x: number; y: number; z?: number }
 
-export interface StemElement extends Element {
-  readonly jsxElementFunction?: ElementFunction
-  readonly geometryFn?: () => Geometry
-  props: any
-  position: Point
-  setPosition(x: number, y: number): void
+export abstract class StemElement implements Element {
+  abstract entityID: number
+  abstract name: string
+  abstract readonly jsxElementFunction?: ElementFunction
+  abstract readonly geometryFn?: () => Geometry
+  abstract props: any
+  abstract position: Point
+  abstract setPosition(x: number, y: number): void
 }
 
 type PropsWithText = {
@@ -62,13 +67,22 @@ export class Node implements StemElement {
 export class Document implements Element {
   entityID = 0
   name = "document"
-  children: Element[] = []
+  @Type(() => StemElement, {
+    discriminator: {
+      property: "name",
+      subTypes: [
+        { value: TextBoxNode, name: "text-box-node" },
+        { value: LineNode, name: "line-node" },
+      ],
+    },
+  })
+  children: StemElement[] = []
 
-  addElement(element: Element): void {
+  addElement(element: StemElement): void {
     this.children.push(element)
   }
 
-  removeElement(element: Element): void {
+  removeElement(element: StemElement): void {
     const index = this.children.indexOf(element)
     if (index > -1) {
       this.children.splice(index, 1)

@@ -101,13 +101,28 @@ export class LineNodeFactory implements ShapeFactory {
 
     this.editorService.addElementAtCursor(docElement)
 
+    this.registerContexts(docElement)
+    this.editorService.navigateTo(`root/document/${entity}/edit`)
+  }
+
+  load(docElement: LineNode) {
+    const entity = this.editorService.generateEntity()
+    docElement.entityID = entity
+
+    this.editorService.addElement(docElement)
+
+    this.registerContexts(docElement)
+    this.editorService.navigateTo("root")
+  }
+
+  private registerContexts(docElement: LineNode) {
+    const entity = docElement.entityID
     const editContext = new LineEditContext(
       this.editorService,
       docElement,
       `root/document/${entity}/edit`
     )
     this.editorService.registerContext(editContext.name, editContext)
-    this.editorService.navigateTo(`root/document/${entity}/edit`)
   }
 }
 

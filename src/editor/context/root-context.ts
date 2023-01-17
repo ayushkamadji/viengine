@@ -15,6 +15,7 @@ const keybindsJson = {
   l: "moveRight",
   Enter: "createNode",
   "?": "toggleHints",
+  w: "showJSON",
 }
 const keybinds = Object.entries(keybindsJson)
 
@@ -87,6 +88,11 @@ export class RootContext extends AbstractCommandContext {
   @Command("toggleHints")
   private toggleHints(): void {
     this.editorService.toggleHints()
+  }
+
+  @Command("showJSON")
+  private showJSON() {
+    this.editorService.__loadDoc()
   }
 
   private moveCursor(deltaX: number, deltaY: number): void {

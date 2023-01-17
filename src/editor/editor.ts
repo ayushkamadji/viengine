@@ -154,7 +154,7 @@ export class EditorLayer implements Layer {
       hintsEntity
     )
 
-    this.factoryRegistry = new ElementFactoryRegistry(this.editorService)
+    this.factoryRegistry = this.editorService.getFactoryRegistry()
 
     this.factoryRegistry.registerFactory(TextBoxNode, TextBoxFactory)
     this.factoryRegistry.registerFactory(LineNode, LineNodeFactory)

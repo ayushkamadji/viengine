@@ -1,10 +1,11 @@
-import { Element } from "../vieditor-element"
+import { Element, StemElement } from "../vieditor-element"
 import { EditorService } from "../editor-service"
 
 export interface ShapeFactory {
   editorElement: ElementClass
   name: string
   create(...args: any[]): void
+  load(element: StemElement, ...args: any[]): void
 }
 
 export type ElementClass = { new (...args: any[]): Element }
