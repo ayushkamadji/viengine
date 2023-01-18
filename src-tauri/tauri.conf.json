@@ -1,7 +1,7 @@
 {
   "build": {
-    "beforeBuildCommand": "pnpm run build",
-    "beforeDevCommand": "pnpm run start",
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run start",
     "devPath": "http://localhost:8080",
     "distDir": "../build"
   },
