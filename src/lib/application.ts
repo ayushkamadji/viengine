@@ -14,9 +14,9 @@ export class Application {
     this.logger.info("Starting application...")
   }
 
-  private onEvent = (event: Event) => {
+  private onEvent = async (event: Event) => {
     this.logger.info(`Event: ${event.type}`)
-    this.layerStack.onEvent(event)
+    await this.layerStack.onEvent(event)
   }
 
   pushLayer(layer: Layer) {

@@ -1,14 +1,14 @@
 import { Event } from "./event"
 
 export interface Layer {
-  onEvent(event: Event): void
+  onEvent(event: Event): void | Promise<void>
 }
 export class LayerStack {
   private layers: Layer[] = []
 
-  onEvent(event: Event) {
+  async onEvent(event: Event) {
     for (const layer of this.layers) {
-      layer.onEvent(event)
+      await layer.onEvent(event)
       if (event.handled) {
         break
       }

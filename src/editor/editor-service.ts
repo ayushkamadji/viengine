@@ -17,19 +17,22 @@ import {
 } from "./context/context.interface"
 import { instanceToPlain, plainToInstance } from "class-transformer"
 import { ElementClass, ElementFactoryRegistry } from "./shapes/shape-factory"
+import { DialogFilter, SystemUtil } from "../lib/system-util"
 
 export const HIGHLIGH_OFFSET = 20
+export const FILE_FILTER: DialogFilter = { extensions: ["vg"], name: "ViGram" }
+
 export class EditorService {
   private readonly factoryRegistry: ElementFactoryRegistry
   constructor(
-    readonly document: Document,
     private readonly entityManager: EntityManager,
     private readonly contextNavigator: ContextNavigator,
     private readonly cursorEntity: Entity,
     private readonly ui: UI,
     private readonly canvas: Canvas,
     private readonly highlightEntity: Entity,
-    private readonly hintsEntity: Entity
+    private readonly hintsEntity: Entity,
+    private readonly systemUtil: SystemUtil
   ) {
     this.factoryRegistry = new ElementFactoryRegistry(this) // FIXME: circular dep
   }
@@ -60,22 +63,6 @@ export class EditorService {
     element.setPosition(x, y)
 
     this.addElement(element)
-    // this.canvas.document.addElement(element)
-    // if (element.jsxElementFunction) {
-    //   const entity: Entity = element.entityID
-
-    //   const canvasRendererComponent: CanvasRendererComponent =
-    //     new CanvasRendererComponent(element.jsxElementFunction, element.props)
-
-    //   this.entityManager.addComponent(entity, canvasRendererComponent)
-    // }
-
-    // if (element.geometryFn) {
-    //   this.entityManager.addComponent(
-    //     element.entityID,
-    //     new SelectorComponent(element.geometryFn)
-    //   )
-    // }
   }
 
   addElement(element: StemElement) {
@@ -238,23 +225,32 @@ export class EditorService {
     this.updateUI(this.hintsEntity, this.ui.hints)
   }
 
-  __printDocumentJSON() {
-    const plainObj = instanceToPlain(this.document, {
+  private serializeDocument() {
+    const plainObj = instanceToPlain(this.canvas.document, {
       excludePrefixes: ["geometryFn", "jsxElementFunction"],
     })
     return JSON.stringify(plainObj)
   }
 
-  __debugDocument() {
-    const docJson = this.__printDocumentJSON()
-    const result = plainToInstance(Document, JSON.parse(docJson))
-    return result
+  async saveDoc() {
+    const filename = await this.systemUtil.saveFileDialog([FILE_FILTER])
+    if (typeof filename === "string") {
+      const docJson = this.serializeDocument()
+      await this.systemUtil.writeFile(filename, docJson)
+    }
   }
 
-  __loadDoc() {
-    const savedDoc = plainToInstance(Document, JSON.parse(docJsonSaved))
-    for (const childElement of savedDoc.children) {
-      this.__loadElement(childElement)
+  async loadDoc() {
+    const filename = await this.systemUtil.openFileDialog([FILE_FILTER])
+    console.log(filename)
+
+    if (typeof filename === "string") {
+      const contents = await this.systemUtil.readFile(filename)
+      const savedDoc = plainToInstance(Document, JSON.parse(contents))
+
+      for (const childElement of savedDoc.children) {
+        this.__loadElement(childElement)
+      }
     }
   }
 
@@ -270,55 +266,3 @@ export class EditorService {
     return this.factoryRegistry
   }
 }
-
-const docJsonSaved = `{
-  "entityID": 0,
-  "name": "document",
-  "children": [
-    {
-      "name": "text-box-node",
-      "position": { "x": 118, "y": 118 },
-      "props": {
-        "x": 0,
-        "y": 0,
-        "transform": "translate(118, 118)",
-        "width": 220,
-        "height": 100,
-        "text": "hello world",
-        "rectProps": {
-          "x": 0,
-          "y": 0,
-          "width": 220,
-          "height": 100,
-          "stroke": "white"
-        },
-        "textProps": {
-          "x": 110,
-          "y": 50,
-          "fill": "white",
-          "alignment-baseline": "middle",
-          "text-anchor": "middle"
-        }
-      },
-      "entityID": 744
-    },
-    {
-      "props": {
-        "gProps": { "transform": "translate(398, 238)" },
-        "lineProps": {
-          "x1": 0,
-          "y1": 0,
-          "x2": 120,
-          "y2": 80,
-          "stroke-width": 2,
-          "stroke": "white",
-          "marker-end": "url(#end-arrowhead)"
-        }
-      },
-      "position": { "x": 398, "y": 238 },
-      "entityID": 745,
-      "name": "line-node"
-    }
-  ]
-}
-`

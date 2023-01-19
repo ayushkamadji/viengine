@@ -21,6 +21,7 @@ import { Document } from "./vieditor-element"
 import { LineNode, LineNodeFactory } from "./shapes/line-factory"
 import { HighlightParams, SelectorSystem } from "./ecs-systems/selector-system"
 import { Line } from "../lib/util/geometry"
+import { SystemUtil } from "../lib/system-util"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -91,7 +92,8 @@ export class UI {
 }
 
 export class Canvas {
-  constructor(public document: Document) {}
+  document: Document = new Document()
+  constructor() {}
 }
 
 export class EditorLayer implements Layer {
@@ -100,9 +102,8 @@ export class EditorLayer implements Layer {
   static RECT_SIZE = 30
   static GRID_DOT_SIZE = 2
   private contextNavigator: ContextNavigator
-  private document: Document = new Document()
   private ui: UI = new UI()
-  private canvas: Canvas = new Canvas(this.document)
+  private canvas: Canvas = new Canvas()
   private entityManager: EntityManager
   private uiRendererSystem: UIRendererSystem
   private staticUIRendererSystem: StaticUIRendererSystem
@@ -114,7 +115,8 @@ export class EditorLayer implements Layer {
 
   constructor(
     private readonly uiRenderer: UIRenderer,
-    private readonly canvasRenderer: CanvasRenderer
+    private readonly canvasRenderer: CanvasRenderer,
+    private readonly systemUtil: SystemUtil
   ) {
     this.contextNavigator = new ContextNavigator()
     this.entityManager = new EntityManager()
@@ -144,14 +146,14 @@ export class EditorLayer implements Layer {
     const hintsEntity = this.entityManager.createEntity()
 
     this.editorService = new EditorService(
-      this.document,
       this.entityManager,
       this.contextNavigator,
       cursorEntity, //TODO: move to ui entities to ui object
       this.ui,
       this.canvas,
       highlighterEntity,
-      hintsEntity
+      hintsEntity,
+      this.systemUtil
     )
 
     this.factoryRegistry = this.editorService.getFactoryRegistry()
@@ -174,8 +176,8 @@ export class EditorLayer implements Layer {
     this.render()
   }
 
-  onEvent(event: Event): void {
-    this.contextNavigator.getCurrentContext().onEvent(event)
+  async onEvent(event: Event): Promise<void> {
+    await this.contextNavigator.getCurrentContext().onEvent(event)
     this.render()
   }
 
@@ -205,10 +207,10 @@ export class EditorLayer implements Layer {
 
   private addUIGrid() {
     const { width, height } = this.uiRenderer.getSize()
-    const maxColumns = Math.floor(width / EditorLayer.GRID_GAP)
-    const maxRows = Math.floor(height / EditorLayer.GRID_GAP)
-    for (let i = 1; i <= maxColumns; i++) {
-      for (let j = 1; j <= maxRows; j++) {
+    const maxColumns = Math.ceil(width / EditorLayer.GRID_GAP)
+    const maxRows = Math.ceil(height / EditorLayer.GRID_GAP)
+    for (let i = 1; i < maxColumns; i++) {
+      for (let j = 1; j < maxRows; j++) {
         const x = i * EditorLayer.GRID_GAP
         const y = j * EditorLayer.GRID_GAP
         const index = (i - 1) * maxRows + j

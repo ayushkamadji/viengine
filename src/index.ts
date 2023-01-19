@@ -3,21 +3,22 @@ import "./style.css"
 import "./lib/ui.css"
 import "./lib/canvas.css"
 import { Application } from "./lib/application"
-import { Debugger } from "./lib/debug/debugger"
+//TODO: Redo internal debugger import { Debugger } from "./lib/debug/debugger"
 import { BrowserWindow } from "./lib/window"
 import { EditorLayer } from "./editor/editor"
 import { UIRenderer } from "./lib/ui-renderer"
 import { CanvasRenderer } from "./lib/canvas-renderer"
+import { TauriSystemUtil } from "./lib/system-util"
+import { ConsoleLogger } from "./lib/logger"
 
 document.addEventListener("DOMContentLoaded", () => {
-  const _debugger = new Debugger(document, 5)
-  window["ViEngine"] = {
-    _debugger,
-  }
-  const logger = _debugger.getLogger()
+  window["ViEngine"] = {}
+  // App setup
+  const logger = new ConsoleLogger("CORE")
   const applicationWindow = new BrowserWindow(window)
   const app = new Application(logger, applicationWindow)
 
+  // Layer setup
   const uiRoot = document.createElement("div")
   uiRoot.classList.add("ui")
   document.body.appendChild(uiRoot)
@@ -29,8 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.appendChild(canvasRootContainer)
   const canvasRenderer = new CanvasRenderer(canvasRootContainer, document)
 
-  const editorLayer = new EditorLayer(uiRenderer, canvasRenderer)
+  const system = new TauriSystemUtil()
+  const editorLayer = new EditorLayer(uiRenderer, canvasRenderer, system)
 
+  // Inject and start
   app.pushLayer(editorLayer)
 
   app.start()

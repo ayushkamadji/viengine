@@ -73,6 +73,7 @@
     ]
   },
   "dependencies": {
+    "@tauri-apps/api": "^1.2.0",
     "@vijsx/jsx-runtime": "link:src\\lib\\vi-jsx",
     "class-transformer": "^0.5.1",
     "d3-polygon": "^3.0.1",

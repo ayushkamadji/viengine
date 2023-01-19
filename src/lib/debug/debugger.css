@@ -1,4 +1,5 @@
 .debugger {
+  display: none;
   min-width: 400px;
   min-height: 100px;
   position: absolute;
