@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "vigram"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Diagram editor hjkl"
+authors = ["partohap.ayushka@gmail.com"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "vigram"
 edition = "2021"
 rust-version = "1.59"
 

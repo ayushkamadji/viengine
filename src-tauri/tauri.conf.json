@@ -63,10 +63,8 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 900,
         "resizable": true,
-        "title": "Vigram",
-        "width": 1600
+        "title": "Vigram"
       }
     ]
   }
