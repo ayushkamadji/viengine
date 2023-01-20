@@ -18,7 +18,7 @@ function detectNewline(string) {
 }
 
 function findLineIndexWithVersion(lines, _name) {
-  const lineWithName = lines.findIndex((line) => line.match(`name = "vigram"`))
+  const lineWithName = lines.findIndex((line) => line.match(`name = "vicalc"`))
   let lineWithVersion = lineWithName + 1
 
   let keep = true
@@ -36,7 +36,7 @@ function findLineIndexWithVersion(lines, _name) {
 
 module.exports.readVersion = function readVersion(contents) {
   const parsed = toml.parse(contents)
-  return parsed.package.find((pkg) => pkg.name === "vigram").version
+  return parsed.package.find((pkg) => pkg.name === "vicalc").version
 }
 
 module.exports.writeVersion = function writeVersion(contents, version) {

@@ -20,7 +20,10 @@ import { ElementClass, ElementFactoryRegistry } from "./shapes/shape-factory"
 import { DialogFilter, SystemUtil } from "../lib/system-util"
 
 export const HIGHLIGH_OFFSET = 20
-export const FILE_FILTER: DialogFilter = { extensions: ["vg"], name: "ViGram" }
+export const FILE_FILTER: DialogFilter = {
+  extensions: ["vc", "vg"],
+  name: "ViCalc",
+}
 
 export class EditorService {
   private readonly factoryRegistry: ElementFactoryRegistry

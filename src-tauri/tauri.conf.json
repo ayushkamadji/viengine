@@ -6,7 +6,7 @@
     "distDir": "../build"
   },
   "package": {
-    "productName": "vigram",
+    "productName": "vicalc",
     "version": "0.1.1"
   },
   "tauri": {
@@ -36,7 +36,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.ayushkamadji.vigram",
+      "identifier": "com.ayushkamadji.vicalc",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -58,13 +58,16 @@
       "csp": null
     },
     "updater": {
-      "active": false
+      "active": true,
+      "endpoints": ["https://ayushkamadji.com/vicalc-update.json"],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY3NjVFMkU4MEZDMkIzQjMKUldTenM4SVA2T0psOS9ESTJkdVBRb0NGWHBCVHptVDMwS0RPR01YRUJjMUsvR05GWG1XTGw2dUkK"
     },
     "windows": [
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "Vigram"
+        "title": "ViCalc"
       }
     ]
   }
