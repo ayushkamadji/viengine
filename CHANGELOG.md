@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.3](https://github.com/ayushkamadji/viengine/compare/v0.1.2...v0.1.3) (2023-01-20)
+
+
+### Features
+
+* **auto-updater:** test ([eeff3e8](https://github.com/ayushkamadji/viengine/commit/eeff3e87c48a654363c26c45f6ebed003f6f74fd))
+
 ## [0.1.2](https://github.com/ayushkamadji/viengine/compare/v0.1.1...v0.1.2) (2023-01-20)
 
 

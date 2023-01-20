@@ -1,6 +1,6 @@
 [package]
 name = "vicalc"
-version = "0.1.2"
+version = "0.1.3"
 description = "Diagram editor hjkl"
 authors = ["partohap.ayushka@gmail.com"]
 license = ""
