@@ -1,6 +1,6 @@
 [package]
 name = "vigram"
-version = "0.1.0"
+version = "0.1.1"
 description = "Diagram editor hjkl"
 authors = ["partohap.ayushka@gmail.com"]
 license = ""
