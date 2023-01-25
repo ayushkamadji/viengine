@@ -10,7 +10,8 @@
       "name": "Launch Edge against localhost",
       "url": "http://localhost:8080",
       "webRoot": "${workspaceFolder}",
-      "sourceMaps": true
+      "sourceMaps": true,
+      "smartStep": true
     }
   ]
 }

@@ -18,20 +18,24 @@ export type DialogFilter = {
 export class TauriSystemUtil implements SystemUtil {
   static FILTER_NAME = "ViengineTauriFilter"
   async writeFile(path: string, contents: string): Promise<void> {
-    return writeTextFile(path, contents)
+    const result = await writeTextFile(path, contents)
+    return result
   }
 
   async readFile(path: string): Promise<string> {
-    return readTextFile(path)
+    const result = await readTextFile(path)
+    return result
   }
 
   async openFileDialog(
     filters: DialogFilter[] = []
   ): Promise<null | string | string[]> {
-    return open({ filters })
+    const result = await open({ filters })
+    return result
   }
 
   async saveFileDialog(filters: DialogFilter[] = []): Promise<null | string> {
-    return save({ filters })
+    const result = await save({ filters })
+    return result
   }
 }

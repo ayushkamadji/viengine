@@ -10,6 +10,7 @@ import { UIRenderer } from "./lib/ui-renderer"
 import { CanvasRenderer } from "./lib/canvas-renderer"
 import { TauriSystemUtil } from "./lib/system-util"
 import { ConsoleLogger } from "./lib/logger"
+import { BrowserDocumentUtil } from "./lib/document-util"
 
 document.addEventListener("DOMContentLoaded", () => {
   window["ViEngine"] = {}
@@ -31,7 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const canvasRenderer = new CanvasRenderer(canvasRootContainer, document)
 
   const system = new TauriSystemUtil()
-  const editorLayer = new EditorLayer(uiRenderer, canvasRenderer, system)
+  const documentUtil = new BrowserDocumentUtil(document)
+  const editorLayer = new EditorLayer(
+    uiRenderer,
+    canvasRenderer,
+    system,
+    documentUtil
+  )
 
   // Inject and start
   app.pushLayer(editorLayer)

@@ -6,6 +6,7 @@ import { ElementFactoryRegistry } from "../shapes/shape-factory"
 import { HighlightContextFactory } from "./highlight-context-factory"
 import { Entity } from "../ecs/entity-component-system"
 import { HighlightParams } from "../ecs-systems/selector-system"
+import { RootMenuContext } from "./root-menu-context"
 
 // TODO: move to json, and figure out how to load
 const keybindsJson = {
@@ -16,6 +17,7 @@ const keybindsJson = {
   Enter: "createNode",
   e: "open",
   w: "save",
+  ":": "menu",
   "?": "toggleHints",
 }
 const keybinds = Object.entries(keybindsJson)
@@ -25,6 +27,7 @@ export class RootContext extends AbstractCommandContext {
   name: string
   private readonly nodeCreationContext: NodeCreationContext
   private readonly highlightContextFactory: HighlightContextFactory
+  private readonly rootMenuContext: RootMenuContext
 
   constructor(
     private readonly editorService: EditorService,
@@ -51,6 +54,13 @@ export class RootContext extends AbstractCommandContext {
       "/root/highlight",
       this.highlightContextFactory
     )
+
+    this.rootMenuContext = new RootMenuContext(
+      this.editorService,
+      `${name}/menu`
+    )
+    this.rootMenuContext.setExitContext(this)
+    this.editorService.registerContext(`${name}/menu`, this.rootMenuContext)
   }
 
   onExit(): void {
@@ -99,6 +109,11 @@ export class RootContext extends AbstractCommandContext {
   @Command("toggleHints")
   private toggleHints(): void {
     this.editorService.toggleHints()
+  }
+
+  @Command("menu")
+  private menu(): void {
+    this.editorService.navigateTo(this.rootMenuContext)
   }
 
   private moveCursor(deltaX: number, deltaY: number): void {

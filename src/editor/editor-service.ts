@@ -18,11 +18,18 @@ import {
 import { instanceToPlain, plainToInstance } from "class-transformer"
 import { ElementClass, ElementFactoryRegistry } from "./shapes/shape-factory"
 import { DialogFilter, SystemUtil } from "../lib/system-util"
+import { DocumentUtil } from "../lib/document-util"
+import { CanvasRenderer } from "../lib/canvas-renderer"
 
 export const HIGHLIGH_OFFSET = 20
-export const FILE_FILTER: DialogFilter = {
+export const VICALC_FILE_FILTER: DialogFilter = {
   extensions: ["vc", "vg"],
   name: "ViCalc",
+}
+
+const SVG_FILE_FILTER: DialogFilter = {
+  extensions: ["svg"],
+  name: "SVG",
 }
 
 export class EditorService {
@@ -35,7 +42,9 @@ export class EditorService {
     private readonly canvas: Canvas,
     private readonly highlightEntity: Entity,
     private readonly hintsEntity: Entity,
-    private readonly systemUtil: SystemUtil
+    private readonly systemUtil: SystemUtil,
+    private readonly documentUtil: DocumentUtil,
+    private readonly canvasRenderer: CanvasRenderer
   ) {
     this.factoryRegistry = new ElementFactoryRegistry(this) // FIXME: circular dep
   }
@@ -236,7 +245,7 @@ export class EditorService {
   }
 
   async saveDoc() {
-    const filename = await this.systemUtil.saveFileDialog([FILE_FILTER])
+    const filename = await this.systemUtil.saveFileDialog([VICALC_FILE_FILTER])
     if (typeof filename === "string") {
       const docJson = this.serializeDocument()
       await this.systemUtil.writeFile(filename, docJson)
@@ -244,7 +253,7 @@ export class EditorService {
   }
 
   async loadDoc() {
-    const filename = await this.systemUtil.openFileDialog([FILE_FILTER])
+    const filename = await this.systemUtil.openFileDialog([VICALC_FILE_FILTER])
     console.log(filename)
 
     if (typeof filename === "string") {
@@ -267,5 +276,18 @@ export class EditorService {
 
   getFactoryRegistry() {
     return this.factoryRegistry
+  }
+
+  async exportSVG(): Promise<void> {
+    const svgDocString = this.documentUtil.createSVGDocument(
+      this.canvasRenderer
+    )
+
+    if (svgDocString) {
+      const filename = await this.systemUtil.saveFileDialog([SVG_FILE_FILTER])
+      if (typeof filename === "string") {
+        await this.systemUtil.writeFile(filename, svgDocString)
+      }
+    }
   }
 }

@@ -23,3 +23,29 @@
 .node-create-menu div.highlight {
   background-color: #0f05;
 }
+
+.root-menu {
+  position: absolute;
+  color: white;
+  width: 120px;
+  box-shadow: 2px 2px 4px 0 #0af8;
+  z-index: 750;
+  background-color: #555f;
+  border-radius: 8px;
+}
+
+.root-menu div {
+  padding: 8px;
+}
+
+.root-menu div:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.root-menu div:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.root-menu div.highlight {
+  background-color: #0af5;
+}

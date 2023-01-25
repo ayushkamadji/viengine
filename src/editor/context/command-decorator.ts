@@ -43,6 +43,7 @@ export function CommandContext(config: CommandContextConfig) {
             await command()
           }
         }
+        return
       }
 
       private loadCommands() {
@@ -76,11 +77,13 @@ export function CommandContext(config: CommandContextConfig) {
   return result
 }
 
+type CommandFunction = () => void | Promise<void>
+
 export class CommandResolver {
   private readonly keybinds: [string, string][] = []
-  private readonly commands: Map<string, () => void> = new Map()
+  private readonly commands: Map<string, CommandFunction> = new Map()
 
-  registerCommand(key: string, command: () => void): void {
+  registerCommand(key: string, command: CommandFunction): void {
     this.commands.set(key, command)
   }
 
@@ -88,7 +91,7 @@ export class CommandResolver {
     this.keybinds.push([key, commandName])
   }
 
-  resolve(key: string): (() => void) | undefined {
+  resolve(key: string): CommandFunction | undefined {
     const commandName = this.keybinds.find(([keybind]) => keybind === key)?.[1]
 
     if (commandName) {
@@ -96,7 +99,7 @@ export class CommandResolver {
     }
   }
 
-  resolveCommand(commandName: string): (() => void) | undefined {
+  resolveCommand(commandName: string): CommandFunction | undefined {
     return this.commands.get(commandName)
   }
 

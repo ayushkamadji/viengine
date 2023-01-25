@@ -1,16 +1,12 @@
+import { Entity } from "../ecs/entity-component-system"
+import { EditorService } from "../editor-service"
+import { CommandContext, Command } from "./command-decorator"
 import {
   AbstractCommandContext,
   Context,
   emptyContext,
 } from "./context.interface"
-import { EditorService } from "../editor-service"
-import { Command, CommandContext } from "./command-decorator"
-import { Entity } from "../ecs/entity-component-system"
-import { NodeMenu } from "./root-components"
-import { ElementFactoryRegistry } from "../shapes/shape-factory"
-import { TextBoxNode } from "../shapes/text-box-factory"
-import type { ElementClass } from "../shapes/shape-factory"
-import { LineNode } from "../shapes/line-factory"
+import { RootMenu } from "./root-components"
 
 //TODO: move to json
 const keybindsJson = {
@@ -23,7 +19,7 @@ const keybindsJson = {
 const keybinds = Object.entries(keybindsJson)
 
 @CommandContext({ keybinds })
-export class NodeCreationContext extends AbstractCommandContext {
+export class RootMenuContext extends AbstractCommandContext {
   name: string
   private exitContext: Context = emptyContext
   private menuEntity: Entity | undefined
@@ -31,11 +27,7 @@ export class NodeCreationContext extends AbstractCommandContext {
   //TODO: move filtering to command decorator config and resolver
   private menuItemHideFilter = ["menuUp", "menuDown", "executeCommand"]
 
-  constructor(
-    private readonly editorService: EditorService,
-    private readonly factoryRegistry: ElementFactoryRegistry,
-    name: string
-  ) {
+  constructor(private readonly editorService: EditorService, name: string) {
     super()
     this.name = name
   }
@@ -52,16 +44,10 @@ export class NodeCreationContext extends AbstractCommandContext {
     this.exitContext = context
   }
 
-  @Command("textBox")
-  private createTextBox(text = "hello world"): void {
-    this.destroyMenu()
-    this.createElementNode(TextBoxNode, text)
-  }
-
-  @Command("arrow")
-  private createLine(): void {
-    this.destroyMenu()
-    this.createElementNode(LineNode)
+  @Command("exportSVG")
+  private async exportSVG(): Promise<void> {
+    await this.editorService.exportSVG()
+    this.exit()
   }
 
   @Command("exit")
@@ -102,15 +88,8 @@ export class NodeCreationContext extends AbstractCommandContext {
     })
   }
 
-  private createElementNode(element: ElementClass, ...args: any[]) {
-    const factory = this.factoryRegistry.getFactory(element)
-    if (factory) {
-      factory.create(...args)
-    }
-  }
-
   private createMenuUI(entity: Entity): void {
-    this.editorService.addUIAtCursor(entity, NodeMenu, {
+    this.editorService.addUIAtCursor(entity, RootMenu, {
       items: this.getMenuItems(),
       selectedIndex: this.selectedMenuItem,
     })

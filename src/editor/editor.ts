@@ -22,6 +22,7 @@ import { LineNode, LineNodeFactory } from "./shapes/line-factory"
 import { HighlightParams, SelectorSystem } from "./ecs-systems/selector-system"
 import { Line } from "../lib/util/geometry"
 import { SystemUtil } from "../lib/system-util"
+import { DocumentUtil } from "../lib/document-util"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -116,7 +117,8 @@ export class EditorLayer implements Layer {
   constructor(
     private readonly uiRenderer: UIRenderer,
     private readonly canvasRenderer: CanvasRenderer,
-    private readonly systemUtil: SystemUtil
+    private readonly systemUtil: SystemUtil,
+    private readonly documentUtil: DocumentUtil
   ) {
     this.contextNavigator = new ContextNavigator()
     this.entityManager = new EntityManager()
@@ -153,7 +155,9 @@ export class EditorLayer implements Layer {
       this.canvas,
       highlighterEntity,
       hintsEntity,
-      this.systemUtil
+      this.systemUtil,
+      this.documentUtil,
+      this.canvasRenderer
     )
 
     this.factoryRegistry = this.editorService.getFactoryRegistry()
@@ -177,8 +181,14 @@ export class EditorLayer implements Layer {
   }
 
   async onEvent(event: Event): Promise<void> {
-    await this.contextNavigator.getCurrentContext().onEvent(event)
-    this.render()
+    const context = this.contextNavigator.getCurrentContext()
+    try {
+      await context.onEvent(event)
+    } catch (_e) {
+      //TODO: handle event handling error
+    } finally {
+      this.render()
+    }
   }
 
   private render() {

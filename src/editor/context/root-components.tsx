@@ -2,26 +2,28 @@ import {
   BaseUIPropType,
   ElementFunction,
 } from "../ecs-systems/renderer-element"
-import "./node-creation.css"
+import "./root.css"
 
-type MenuProps = BaseUIPropType & {
+type MenuProps = MenuDataProps & {
+  id: string
+  className: string
+}
+
+type MenuDataProps = BaseUIPropType & {
   items: string[]
   selectedIndex: number
 }
 
 export const Menu: ElementFunction = ({
+  id,
+  className,
   x,
   y,
   items,
   selectedIndex,
 }: MenuProps) => {
   return (
-    <div
-      id="node-create-menu"
-      className="node-create-menu"
-      data-x={x}
-      data-y={y}
-    >
+    <div id={id} className={className} data-x={x} data-y={y}>
       {items.map((item, i) => {
         const highlightClass = i === selectedIndex ? "highlight" : ""
         return (
@@ -31,6 +33,32 @@ export const Menu: ElementFunction = ({
         )
       })}
     </div>
+  )
+}
+
+export const NodeMenu = ({ x, y, items, selectedIndex }: MenuDataProps) => {
+  return (
+    <Menu
+      id="node-create-menu"
+      className="node-create-menu"
+      x={x}
+      y={y}
+      items={items}
+      selectedIndex={selectedIndex}
+    />
+  )
+}
+
+export const RootMenu = ({ x, y, items, selectedIndex }: MenuDataProps) => {
+  return (
+    <Menu
+      id="root-menu"
+      className="root-menu"
+      x={x}
+      y={y}
+      items={items}
+      selectedIndex={selectedIndex}
+    />
   )
 }
 

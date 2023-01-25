@@ -121,4 +121,8 @@ export class CanvasRenderer {
     svgRoot.setAttribute("xlmns", SVG_NAMESPACE_URL)
     this.canvasRootContainer.appendChild(svgRoot)
   }
+
+  getRootSVGElement(): SVGElement | null {
+    return this.canvasRootContainer.querySelector("#vi-svg-root")
+  }
 }
