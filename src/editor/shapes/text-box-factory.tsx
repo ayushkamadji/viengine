@@ -7,7 +7,8 @@ import {
   Context,
   emptyContext,
 } from "../context/context.interface"
-import { Event, KeyDownEvent } from "../../lib/event"
+import { Event } from "../../lib/event"
+import { KeyDownEvent } from "../../lib/keyboard-event"
 import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"

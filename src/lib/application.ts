@@ -15,7 +15,7 @@ export class Application {
   }
 
   private onEvent = async (event: Event) => {
-    this.logger.info(`Event: ${event.type}`)
+    this.logger.info(`Event: ${event.toString()}`)
     await this.layerStack.onEvent(event)
   }
 

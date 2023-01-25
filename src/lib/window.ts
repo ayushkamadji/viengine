@@ -1,47 +1,49 @@
-import { Event as ViEvent, KeyDownEvent, KeyUpEvent } from "./event"
+import { Event as ViEvent } from "./event"
+import { KeyDownEvent, KeyUpEvent } from "./keyboard-event"
 
 export interface ApplicationWindow {
   setEventCallback(callback: (event: ViEvent) => void): void
 }
 
 export class BrowserWindow implements ApplicationWindow {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  private eventHandler: (event: ViEvent) => void = () => {}
+  private eventHandler?: (event: ViEvent) => void
 
   constructor(_window: Window) {
-    _window.addEventListener("keydown", this.onWindowEvent("keydown"))
-    _window.addEventListener("keyup", this.onWindowEvent("keyup"))
+    _window.addEventListener("keydown", this.onWindowEvent<KeyboardEvent>())
+    _window.addEventListener("keyup", this.onWindowEvent<KeyboardEvent>())
   }
 
   setEventCallback(callback: (event: ViEvent) => void): void {
     this.eventHandler = callback
   }
 
-  private onWindowEvent(type: "keydown" | "keyup"): (event: Event) => void {
-    //TODO: map type strings to ViEvent types
+  private onWindowEvent<T extends Event>(): (event: T) => void {
+    return (event: T) => {
+      const e = EventFactory.createEvent<T>(event)
 
-    const handleFn = (event: Event) => {
-      let e: ViEvent = {
-        type: "unknown",
-        handled: true,
+      if (e.type !== "NoOp" && this.eventHandler) {
+        this.eventHandler(e)
       }
-      if (type === "keydown") {
-        e = new KeyDownEvent((event as KeyboardEvent).key)
-        if ((event as KeyboardEvent).repeat) {
-          ;(e as KeyDownEvent).isRepeat = true
-        }
-      } else if (type === "keyup") {
-        e = new KeyUpEvent((event as KeyboardEvent).key)
-      }
+    }
+  }
+}
 
-      this.eventHandler(e)
-
-      if (e.handled) {
-        event.preventDefault()
-        event.stopPropagation()
+class EventFactory {
+  static createEvent<T extends Event>(event: T): ViEvent {
+    if (event instanceof KeyboardEvent) {
+      switch (event.type) {
+        case "keydown":
+          return new KeyDownEvent(event.key, event.repeat)
+        case "keyup":
+          return new KeyUpEvent(event.key)
+        default:
+          break
       }
     }
 
-    return handleFn
+    return {
+      type: "NoOp",
+      handled: true,
+    }
   }
 }

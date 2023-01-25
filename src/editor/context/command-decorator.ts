@@ -1,5 +1,6 @@
 import { AbstractCommandContext } from "./context.interface"
-import { Event, KeyDownEvent } from "../../lib/event"
+import { Event } from "../../lib/event"
+import { KeyDownEvent } from "../../lib/keyboard-event"
 
 export const COMMAND_NAME_METADATA = "commandName"
 
