@@ -39,7 +39,7 @@ export function CommandContext(config: CommandContextConfig) {
       async onEvent(event: Event): Promise<void> {
         await super.onEvent(event)
         if (event instanceof KeyDownEvent) {
-          const command = this.commandResolver.resolve(event.key)
+          const command = this.commandResolver.resolve(event.comboCode)
           if (command) {
             await command()
           }

@@ -1,46 +1,11 @@
 import { EditorService } from "../editor-service"
 import { ShapeFactory } from "./shape-factory"
 import { Command, CommandContext } from "../context/command-decorator"
-import {
-  AbstractCommandContext,
-  AbstractContext,
-  Context,
-  emptyContext,
-} from "../context/context.interface"
-import { Event } from "../../lib/event"
-import { KeyDownEvent } from "../../lib/keyboard-event"
+import { AbstractCommandContext } from "../context/context.interface"
 import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
-
-const printableKeys = [
-  "a",
-  "b",
-  "c",
-  "d",
-  "e",
-  "f",
-  "g",
-  "h",
-  "i",
-  "j",
-  "k",
-  "l",
-  "m",
-  "n",
-  "o",
-  "p",
-  "q",
-  "r",
-  "s",
-  "t",
-  "u",
-  "v",
-  "w",
-  "x",
-  "y",
-  "z",
-]
+import { InsertModeContext } from "./InsertModeContext"
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
@@ -142,62 +107,6 @@ export class TextBoxEditContext extends AbstractCommandContext {
   @Command("exit")
   private exit(): void {
     this.editorService.navigateTo("root")
-  }
-}
-
-export class NormalModeContext extends AbstractContext {
-  name = "NormalModeContext"
-
-  constructor(private readonly editorService: EditorService) {
-    super()
-  }
-}
-
-@CommandContext({
-  keybinds: [["Escape", "exit"]],
-})
-export class InsertModeContext extends AbstractCommandContext {
-  private exitContext: Context = emptyContext
-
-  constructor(
-    private readonly editorService: EditorService,
-    private docElement: TextElement,
-    public name: string
-  ) {
-    super()
-  }
-
-  onEvent(event: Event) {
-    if (event instanceof KeyDownEvent) {
-      this.onKeyType(event.key)
-    }
-  }
-
-  private onKeyType(key: string) {
-    const isPrintable = printableKeys.includes(key)
-    const isBackspace = key === "Backspace"
-    if (isPrintable || isBackspace) {
-      const currentText = this.docElement.props.text
-      let newText
-      if (isPrintable) {
-        newText = currentText + key
-      } else {
-        newText = currentText.slice(0, -1)
-      }
-      this.docElement.props.text = newText
-      this.editorService.setElementProps(this.docElement.entityID, {
-        text: newText,
-      })
-    }
-  }
-
-  @Command("exit")
-  private exit(): void {
-    this.editorService.navigateTo(this.exitContext)
-  }
-
-  setExitContext(context: Context) {
-    this.exitContext = context
   }
 }
 

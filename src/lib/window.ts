@@ -31,11 +31,20 @@ export class BrowserWindow implements ApplicationWindow {
 class EventFactory {
   static createEvent<T extends Event>(event: T): ViEvent {
     if (event instanceof KeyboardEvent) {
+      const {
+        ctrlKey: ctrl,
+        altKey: alt,
+        shiftKey: shift,
+        metaKey: meta,
+        key,
+        code,
+        repeat,
+      } = event
       switch (event.type) {
         case "keydown":
-          return new KeyDownEvent(event.key, event.repeat)
+          return new KeyDownEvent(key, code, { ctrl, alt, shift, meta }, repeat)
         case "keyup":
-          return new KeyUpEvent(event.key)
+          return new KeyUpEvent(key, code, { ctrl, alt, shift, meta })
         default:
           break
       }
