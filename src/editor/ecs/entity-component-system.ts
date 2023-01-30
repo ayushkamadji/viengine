@@ -74,6 +74,8 @@ export class EntityManager {
 
   removeComponent(entity: Entity, component: ComponentClass): void {
     if (this.entities.includes(entity)) {
+      if (!this.entityComponents.has(entity)) return
+
       this.entityComponents.get(entity)!.delete(component)
     }
   }

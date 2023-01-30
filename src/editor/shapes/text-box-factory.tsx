@@ -2,13 +2,21 @@ import { EditorService } from "../editor-service"
 import { ShapeFactory } from "./shape-factory"
 import { Command, CommandContext } from "../context/command-decorator"
 import { AbstractCommandContext } from "../context/context.interface"
-import type { Element, Point, TextElement } from "../vieditor-element"
+import type {
+  Element,
+  Point,
+  TextElement,
+  StemElement,
+} from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { MoveContext } from "./edit-context/move-context"
-import { InsertModeContext } from "./InsertModeContext"
+import { InsertModeContext } from "./edit-context/edit-text-context"
 import { TextBoxResizeContext } from "./edit-context/resize-context"
 import { Entity } from "../ecs/entity-component-system"
+import { Geometry } from "../../lib/util/geometry"
+
+export const HIGHLIGHT_COLOR = "#00ffff"
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
@@ -59,7 +67,7 @@ export class TextBoxEditContext extends AbstractCommandContext {
   private readonly insertModeContext: InsertModeContext
   private readonly moveContext: MoveContext
   private readonly resizeContext: TextBoxResizeContext
-  private highlightEntity: Entity | undefined
+  private readonly gizmoManager: GizmoManager
 
   constructor(
     private readonly editorService: EditorService,
@@ -67,9 +75,13 @@ export class TextBoxEditContext extends AbstractCommandContext {
     public name: string
   ) {
     super()
+
+    this.gizmoManager = new GizmoManager(this.editorService, this.docElement)
+
     this.moveContext = new MoveContext(
       this.editorService,
       this.docElement,
+      this.gizmoManager,
       `root/document/${docElement.entityID}/edit/move`
     )
     this.moveContext.setExitContext(this)
@@ -99,12 +111,7 @@ export class TextBoxEditContext extends AbstractCommandContext {
   }
 
   onEntry(): void {
-    this.highlightEntity = this.editorService.generateEntity()
-    this.editorService.addGizmo(this.highlightEntity, HighlightPolygon, {
-      points: this.docElement.geometryFn(),
-      x: this.docElement.position.x,
-      y: this.docElement.position.y,
-    })
+    this.gizmoManager.addOrReplace(HighlightPolygon)
   }
 
   @Command("move")
@@ -124,9 +131,42 @@ export class TextBoxEditContext extends AbstractCommandContext {
 
   @Command("exit")
   private exit(): void {
+    this.gizmoManager.remove()
     this.editorService.navigateTo("root")
-    if (this.highlightEntity)
-      this.editorService.removeEntity(this.highlightEntity)
+  }
+}
+
+export class GizmoManager {
+  private readonly gizmoEntity: Entity
+  constructor(
+    private readonly editorService: EditorService,
+    private readonly element: StemElement
+  ) {
+    this.gizmoEntity = this.editorService.generateEntity()
+  }
+
+  addOrReplace(gizmo: ElementFunction) {
+    this.editorService.replaceGizmo(this.gizmoEntity, gizmo, this.getProps())
+  }
+
+  update() {
+    this.editorService.setElementCanvasProps(this.gizmoEntity, this.getProps())
+  }
+
+  private getProps() {
+    return {
+      points: this.element.geometryFn(),
+      x: this.element.position.x,
+      y: this.element.position.y,
+    }
+  }
+
+  remove() {
+    this.editorService.removeGizmo(this.gizmoEntity)
+  }
+
+  destroy() {
+    this.editorService.removeEntity(this.gizmoEntity)
   }
 }
 
@@ -212,15 +252,20 @@ export class TextBoxNode implements TextElement {
   }
 }
 
-const HighlightPolygon = ({ points }: { points: Point[] }) => {
+export const HighlightPolygon = ({ points }: { points: Geometry }) => {
+  const pointArray = Array.isArray(points) ? points : [points.p1, points.p2]
+  const props = {
+    points: pointArray.map((p) => `${p.x},${p.y}`).join(" "),
+    fill: "none",
+    stroke: HIGHLIGHT_COLOR,
+    "stroke-dasharray": "8 13",
+    // TODO: React svg types wants everything in camel case,
+    // whereas there are camel and kebab case attributes in SVG
+    // Which means this needs manual mapping (reallyy SVG???!!!)
+  }
   return (
     <g>
-      <polygon
-        points={points.map((p) => `${p.x},${p.y}`).join(" ")}
-        fill="none"
-        stroke="blue"
-        strokeDasharray="10,10"
-      />
+      <polygon {...props} />
     </g>
   )
 }

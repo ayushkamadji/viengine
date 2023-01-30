@@ -70,6 +70,7 @@ export const ArrowDown = ({ x, y }: BaseUIPropType) => {
   )
 }
 
+// TODO: Deprecate, replace with svg gizmo
 export const MoveIcon = ({ x, y }: BaseUIPropType) => {
   return (
     <div id="down-arrow" data-x={x} data-y={y}>

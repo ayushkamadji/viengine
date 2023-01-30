@@ -1,14 +1,14 @@
-import { EditorService } from "../editor-service"
-import { Command, CommandContext } from "../context/command-decorator"
+import { EditorService } from "../../editor-service"
+import { Command, CommandContext } from "../../context/command-decorator"
 import {
   AbstractCommandContext,
   AbstractContext,
   Context,
   emptyContext,
-} from "../context/context.interface"
-import { Event } from "../../lib/event"
-import { KeyDownEvent } from "../../lib/keyboard-event"
-import type { TextElement } from "../vieditor-element"
+} from "../../context/context.interface"
+import { Event } from "../../../lib/event"
+import { KeyDownEvent } from "../../../lib/keyboard-event"
+import type { TextElement } from "../../vieditor-element"
 
 export class NormalModeContext extends AbstractContext {
   name = "NormalModeContext"

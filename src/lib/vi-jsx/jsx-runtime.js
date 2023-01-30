@@ -19,7 +19,7 @@ function jsx(tag, props) {
     id: props.id,
     x: props["data-x"],
     y: props["data-y"],
-    attributes: kebabize(props),
+    attributes: props,
     classes: props.className ? props.className.split(" ") : [],
   }
 
@@ -38,14 +38,3 @@ jsx.Fragment = jsxFragment
 jsx.TextNode = jsxTextNode
 
 export { jsx, jsx as jsxs, jsxFragment as Fragment }
-
-const kebabize = (obj) => {
-  const result = {}
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      const value = obj[key]
-      result[key.replace(/([A-Z])/g, "-$1").toLowerCase()] = value
-    }
-  }
-  return result
-}

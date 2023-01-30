@@ -17,7 +17,7 @@ const keybindsJson = {
   Enter: "createNode",
   e: "open",
   w: "save",
-  ":": "menu",
+  "shift+;": "menu",
   "?": "toggleHints",
 }
 const keybinds = Object.entries(keybindsJson)

@@ -5,6 +5,7 @@ import { EditorService } from "../editor-service"
 import { Point, StemElement } from "../vieditor-element"
 import { MoveContext } from "./edit-context/move-context"
 import { ShapeFactory } from "./shape-factory"
+import { GizmoManager, HighlightPolygon } from "./text-box-factory"
 
 export const Line: ElementFunction = ({ gProps, lineProps }) => {
   return (
@@ -18,7 +19,7 @@ export const Line: ElementFunction = ({ gProps, lineProps }) => {
           refY="3.5"
           orient="auto"
         >
-          <polygon points="0 0, 10 3.5, 0 7" fill={lineProps.stroke} />
+          <polygon points="0,0 10,3.5 0,7" fill={lineProps.stroke} />
         </marker>
         <marker
           id="start-arrowhead"
@@ -29,7 +30,7 @@ export const Line: ElementFunction = ({ gProps, lineProps }) => {
           orient="auto"
           markerUnits="strokeWidth"
         >
-          <polygon points="10 0, 10 7, 0 3.5" fill={lineProps.stroke} />
+          <polygon points="10,0 10,7 0,3.5" fill={lineProps.stroke} />
         </marker>
       </defs>
       <line {...lineProps}></line>
@@ -142,6 +143,7 @@ export class LineNodeFactory implements ShapeFactory {
 export class LineEditContext extends AbstractCommandContext {
   static MOVE_STEP = 10
   private readonly moveContext: MoveContext
+  private readonly gizmoManager: GizmoManager
 
   constructor(
     private readonly editorService: EditorService,
@@ -149,13 +151,19 @@ export class LineEditContext extends AbstractCommandContext {
     public name: string
   ) {
     super()
+    this.gizmoManager = new GizmoManager(this.editorService, this.line)
     this.moveContext = new MoveContext(
       this.editorService,
       this.line,
+      this.gizmoManager,
       `root/document/${line.entityID}/edit/move`
     )
     this.moveContext.setExitContext(this)
     this.editorService.registerContext(this.moveContext.name, this.moveContext)
+  }
+
+  onEntry(): void {
+    this.gizmoManager.addOrReplace(HighlightPolygon)
   }
 
   @Command("move")
@@ -225,6 +233,7 @@ export class LineEditContext extends AbstractCommandContext {
   @Command("exit")
   private exit(): void {
     this.editorService.navigateTo("root")
+    this.gizmoManager.remove()
   }
 
   @Command("cancel")

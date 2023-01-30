@@ -1,4 +1,8 @@
-import { Entity, EntityManager } from "./ecs/entity-component-system"
+import {
+  ComponentClass,
+  Entity,
+  EntityManager,
+} from "./ecs/entity-component-system"
 import {
   CanvasRendererComponent,
   UIRendererComponent,
@@ -224,8 +228,6 @@ export class EditorService {
     const newPosY = y + rowDelta * EditorLayer.GRID_GAP
     element.setPosition(newPosX, newPosY)
     this.setElementCanvasProps(element.entityID, element.props)
-
-    this.moveHighlighter(newPosX, newPosY)
   }
 
   navigateTo(context: string | Context, ...args: any[]) {
@@ -313,5 +315,18 @@ export class EditorService {
       props
     )
     this.entityManager.addComponent(entity, canvasRendererComponent)
+  }
+
+  replaceGizmo(entity: Entity, elementFn: ElementFunction, props: any) {
+    this.entityManager.removeComponent(entity, CanvasRendererComponent)
+    this.addGizmo(entity, elementFn, props)
+  }
+
+  removeGizmo(entity: Entity) {
+    this.removeComponent(entity, CanvasRendererComponent)
+  }
+
+  removeComponent(entity: Entity, component: ComponentClass) {
+    this.entityManager.removeComponent(entity, component)
   }
 }

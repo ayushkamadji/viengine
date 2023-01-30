@@ -16,7 +16,7 @@ export abstract class StemElement implements Element {
   abstract entityID: number
   abstract name: string
   abstract readonly jsxElementFunction?: ElementFunction
-  abstract readonly geometryFn?: () => Geometry
+  abstract readonly geometryFn: () => Geometry
   abstract props: any
   abstract position: Point
   abstract setPosition(x: number, y: number): void
