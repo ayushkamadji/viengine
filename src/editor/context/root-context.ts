@@ -18,7 +18,7 @@ const keybindsJson = {
   e: "open",
   w: "save",
   "shift+;": "menu",
-  "?": "toggleHints",
+  "shift+/": "toggleHints",
 }
 const keybinds = Object.entries(keybindsJson)
 

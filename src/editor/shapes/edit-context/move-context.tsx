@@ -1,4 +1,3 @@
-import { Geometry } from "../../../lib/util/geometry"
 import { Command, CommandContext } from "../../context/command-decorator"
 import {
   AbstractCommandContext,
@@ -8,7 +7,8 @@ import {
 import { ElementFunction } from "../../ecs-systems/renderer-element"
 import { EditorService } from "../../editor-service"
 import type { StemElement } from "../../vieditor-element"
-import { GizmoManager, HIGHLIGHT_COLOR } from "../text-box-factory"
+import { HIGHLIGHT_COLOR } from "../text-box-factory"
+import { GizmoManager, GizmoProps } from "../gizmo-manager"
 
 const MOVE_GIZMO_OFFSET = 15
 
@@ -74,15 +74,7 @@ export class MoveContext extends AbstractCommandContext {
   onExit() {}
 }
 
-export const MoveGizmo: ElementFunction = ({
-  points,
-  x,
-  y,
-}: {
-  points: Geometry
-  x: number
-  y: number
-}) => {
+export const MoveGizmo: ElementFunction = ({ points, x, y }: GizmoProps) => {
   const pointArray = Array.isArray(points) ? points : [points.p1, points.p2]
   const minPolyX = Math.min(...pointArray.map((p) => p.x)) - x
   const maxPolyX = Math.max(...pointArray.map((p) => p.x)) - x

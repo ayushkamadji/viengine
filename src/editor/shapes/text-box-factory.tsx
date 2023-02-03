@@ -1,22 +1,29 @@
 import { EditorService } from "../editor-service"
 import { ShapeFactory } from "./shape-factory"
 import { Command, CommandContext } from "../context/command-decorator"
-import { AbstractCommandContext } from "../context/context.interface"
-import type {
-  Element,
-  Point,
-  TextElement,
-  StemElement,
-} from "../vieditor-element"
+import {
+  AbstractCommandContext,
+  Context,
+  emptyContext,
+} from "../context/context.interface"
+import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { MoveContext } from "./edit-context/move-context"
 import { InsertModeContext } from "./edit-context/edit-text-context"
 import { TextBoxResizeContext } from "./edit-context/resize-context"
-import { Entity } from "../ecs/entity-component-system"
-import { Geometry } from "../../lib/util/geometry"
+import { GizmoManager } from "./gizmo-manager"
+import { EditHighlightGizmo } from "./edit-highlight-gizmo"
+import {
+  MoveHandler,
+  PointEditContext,
+  PointEditContextFactory,
+  PointEditSelectContext,
+  PointGizmo,
+} from "./edit-context/point-edit-context"
 
 export const HIGHLIGHT_COLOR = "#00ffff"
+export const SIZING_STEP = 10
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
@@ -55,18 +62,164 @@ export class TextBoxFactory implements ShapeFactory {
   }
 }
 
+type TextBoxMoveHandler = MoveHandler<TextBoxNode>
+
+export class TextBoxPointEditContextFactory
+  implements PointEditContextFactory<TextBoxNode>
+{
+  private moveHandlers: TextBoxMoveHandler[] = [
+    this.handleMoveP1,
+    this.handleMoveP2,
+    this.handleMoveP3,
+    this.handleMoveP4,
+  ]
+
+  create(
+    editorService: EditorService,
+    element: TextBoxNode,
+    gizmoManager: GizmoManager,
+    parentName: string,
+    index: number
+  ): TextBoxPoinEditContext {
+    return new TextBoxPoinEditContext(
+      editorService,
+      element,
+      gizmoManager,
+      `${parentName}/${index}`,
+      this.moveHandlers[index - 1],
+      index - 1
+    )
+  }
+
+  private handleMoveP1(element: TextBoxNode, deltaX: number, deltaY: number) {
+    const { x, y } = element.position
+    const { width, height } = element.props
+    element.setPosition(x + deltaX, y + deltaY)
+    element.setSize(width - deltaX, height - deltaY)
+  }
+
+  private handleMoveP2(element: TextBoxNode, deltaX: number, deltaY: number) {
+    const { x, y } = element.position
+    const { width, height } = element.props
+    element.setPosition(x, y + deltaY)
+    element.setSize(width + deltaX, height - deltaY)
+  }
+
+  private handleMoveP3(element: TextBoxNode, deltaX: number, deltaY: number) {
+    const { x, y } = element.position
+    const { width, height } = element.props
+    element.setPosition(x, y)
+    element.setSize(width + deltaX, height + deltaY)
+  }
+
+  private handleMoveP4(element: TextBoxNode, deltaX: number, deltaY: number) {
+    const { x, y } = element.position
+    const { width, height } = element.props
+    element.setPosition(x + deltaX, y)
+    element.setSize(width - deltaX, height + deltaY)
+  }
+}
+
+@CommandContext({
+  keybinds: [
+    ["h", "moveLeft"],
+    ["j", "moveDown"],
+    ["k", "moveUp"],
+    ["l", "moveRight"],
+    ["Escape", "exit"],
+  ],
+})
+export class TextBoxPoinEditContext
+  extends AbstractCommandContext
+  implements PointEditContext
+{
+  private _exitContext: Context = emptyContext
+
+  constructor(
+    private readonly editorService: EditorService,
+    private readonly element: TextBoxNode,
+    private readonly gizmoManager: GizmoManager,
+    public name: string,
+    private readonly onMove: TextBoxMoveHandler,
+    private readonly pointIndex: number
+  ) {
+    super()
+  }
+
+  @Command("moveUp")
+  private moveUp(): void {
+    this.movePoint(0, -SIZING_STEP)
+  }
+
+  @Command("moveDown")
+  private moveDown(): void {
+    this.movePoint(0, SIZING_STEP)
+  }
+
+  @Command("moveLeft")
+  private moveLeft(): void {
+    this.movePoint(-SIZING_STEP, 0)
+  }
+
+  @Command("moveRight")
+  private moveRight(): void {
+    this.movePoint(SIZING_STEP, 0)
+  }
+
+  movePoint(deltaX: number, deltaY: number): void {
+    this.onMove(this.element, deltaX, deltaY)
+    this.editorService.setElementCanvasProps(
+      this.element.entityID,
+      this.element.props
+    )
+    this.updateGizmo()
+  }
+
+  setExitContext(context: Context): void {
+    this._exitContext = context
+  }
+
+  private updateGizmo(): void {
+    const currentPosition = this.currentPosition()
+    this.gizmoManager.update({
+      x: currentPosition.x,
+      y: currentPosition.y,
+    })
+  }
+
+  onEntry(): void {
+    const currentPosition = this.currentPosition()
+    this.gizmoManager.addOrReplace(PointGizmo, {
+      x: currentPosition.x,
+      y: currentPosition.y,
+    })
+  }
+
+  private currentPosition(): Point {
+    return this.element.geometryFn()[this.pointIndex]
+  }
+
+  @Command("exit")
+  private exit(): void {
+    this.editorService.navigateTo(this._exitContext)
+  }
+}
+
 @CommandContext({
   keybinds: [
     ["i", "insert"],
     ["m", "move"],
     ["r", "resize"],
+    ["p", "pointEdit"],
     ["Escape", "exit"],
   ],
 })
 export class TextBoxEditContext extends AbstractCommandContext {
+  static textBoxPointEditContextFactory = new TextBoxPointEditContextFactory()
   private readonly insertModeContext: InsertModeContext
   private readonly moveContext: MoveContext
   private readonly resizeContext: TextBoxResizeContext
+  private readonly pointEditSelectContext: PointEditSelectContext<TextBoxNode>
   private readonly gizmoManager: GizmoManager
 
   constructor(
@@ -90,6 +243,7 @@ export class TextBoxEditContext extends AbstractCommandContext {
     this.insertModeContext = new InsertModeContext(
       this.editorService,
       this.docElement,
+      this.gizmoManager,
       `root/document/${docElement.entityID}/edit/text/insert`
     )
     this.insertModeContext.setExitContext(this)
@@ -108,10 +262,23 @@ export class TextBoxEditContext extends AbstractCommandContext {
       this.resizeContext.name,
       this.resizeContext
     )
+
+    this.pointEditSelectContext = new PointEditSelectContext(
+      this.editorService,
+      this.docElement,
+      this.gizmoManager,
+      `root/document/${docElement.entityID}/edit/points`,
+      TextBoxEditContext.textBoxPointEditContextFactory
+    )
+    this.pointEditSelectContext.setExitContext(this)
+    this.editorService.registerContext(
+      this.pointEditSelectContext.name,
+      this.pointEditSelectContext
+    )
   }
 
   onEntry(): void {
-    this.gizmoManager.addOrReplace(HighlightPolygon)
+    this.gizmoManager.addOrReplace(EditHighlightGizmo)
   }
 
   @Command("move")
@@ -129,44 +296,15 @@ export class TextBoxEditContext extends AbstractCommandContext {
     this.editorService.navigateTo(this.resizeContext)
   }
 
+  @Command("pointEdit")
+  private pointEdit(): void {
+    this.editorService.navigateTo(this.pointEditSelectContext)
+  }
+
   @Command("exit")
   private exit(): void {
     this.gizmoManager.remove()
     this.editorService.navigateTo("root")
-  }
-}
-
-export class GizmoManager {
-  private readonly gizmoEntity: Entity
-  constructor(
-    private readonly editorService: EditorService,
-    private readonly element: StemElement
-  ) {
-    this.gizmoEntity = this.editorService.generateEntity()
-  }
-
-  addOrReplace(gizmo: ElementFunction) {
-    this.editorService.replaceGizmo(this.gizmoEntity, gizmo, this.getProps())
-  }
-
-  update() {
-    this.editorService.setElementCanvasProps(this.gizmoEntity, this.getProps())
-  }
-
-  private getProps() {
-    return {
-      points: this.element.geometryFn(),
-      x: this.element.position.x,
-      y: this.element.position.y,
-    }
-  }
-
-  remove() {
-    this.editorService.removeGizmo(this.gizmoEntity)
-  }
-
-  destroy() {
-    this.editorService.removeEntity(this.gizmoEntity)
   }
 }
 
@@ -250,22 +388,4 @@ export class TextBoxNode implements TextElement {
   setProps(props: any) {
     this.props = { ...this.props, ...props }
   }
-}
-
-export const HighlightPolygon = ({ points }: { points: Geometry }) => {
-  const pointArray = Array.isArray(points) ? points : [points.p1, points.p2]
-  const props = {
-    points: pointArray.map((p) => `${p.x},${p.y}`).join(" "),
-    fill: "none",
-    stroke: HIGHLIGHT_COLOR,
-    "stroke-dasharray": "8 13",
-    // TODO: React svg types wants everything in camel case,
-    // whereas there are camel and kebab case attributes in SVG
-    // Which means this needs manual mapping (reallyy SVG???!!!)
-  }
-  return (
-    <g>
-      <polygon {...props} />
-    </g>
-  )
 }

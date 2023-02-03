@@ -9,6 +9,7 @@ import {
 import { Event } from "../../../lib/event"
 import { KeyDownEvent } from "../../../lib/keyboard-event"
 import type { TextElement } from "../../vieditor-element"
+import { GizmoManager } from "../gizmo-manager"
 
 export class NormalModeContext extends AbstractContext {
   name = "NormalModeContext"
@@ -30,6 +31,7 @@ export class InsertModeContext extends AbstractCommandContext {
   constructor(
     private readonly editorService: EditorService,
     private docElement: TextElement,
+    private readonly gizmoManager: GizmoManager,
     public name: string
   ) {
     super()
@@ -70,5 +72,9 @@ export class InsertModeContext extends AbstractCommandContext {
 
   setExitContext(context: Context) {
     this.exitContext = context
+  }
+
+  onEntry(): void {
+    this.gizmoManager.remove()
   }
 }

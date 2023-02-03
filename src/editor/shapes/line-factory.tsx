@@ -1,11 +1,24 @@
 import { Command, CommandContext } from "../context/command-decorator"
-import { AbstractCommandContext } from "../context/context.interface"
+import {
+  AbstractCommandContext,
+  Context,
+  emptyContext,
+} from "../context/context.interface"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { EditorService } from "../editor-service"
 import { Point, StemElement } from "../vieditor-element"
 import { MoveContext } from "./edit-context/move-context"
 import { ShapeFactory } from "./shape-factory"
-import { GizmoManager, HighlightPolygon } from "./text-box-factory"
+import { EditHighlightGizmo } from "./edit-highlight-gizmo"
+import { GizmoManager } from "./gizmo-manager"
+import {
+  MoveHandler,
+  PointEditContext,
+  PointEditContextFactory,
+  PointEditSelectContext,
+  PointGizmo,
+} from "./edit-context/point-edit-context"
+import { SIZING_STEP } from "./text-box-factory"
 
 export const Line: ElementFunction = ({ gProps, lineProps }) => {
   return (
@@ -128,13 +141,134 @@ export class LineNodeFactory implements ShapeFactory {
   }
 }
 
+type LineMoveHandler = MoveHandler<LineNode>
+export class LinePointEditContextFactory
+  implements PointEditContextFactory<LineNode>
+{
+  private readonly moveHandlers: LineMoveHandler[] = [
+    this.handleMoveP1,
+    this.handleMoveP2,
+  ]
+  create(
+    editorService: EditorService,
+    element: LineNode,
+    gizmoManager: GizmoManager,
+    parentName: string,
+    index: number
+  ): PointEditContext {
+    return new LinePointEditContext(
+      editorService,
+      element,
+      gizmoManager,
+      `${parentName}/${index}`,
+      this.moveHandlers[index - 1],
+      index - 1
+    )
+  }
+
+  private handleMoveP1(element: LineNode, deltaX: number, deltaY) {
+    const position = element.position
+    element.setPosition(position.x + deltaX, position.y + deltaY)
+    element.props.lineProps.x2 -= deltaX
+    element.props.lineProps.y2 -= deltaY
+  }
+
+  private handleMoveP2(element: LineNode, deltaX: number, deltaY) {
+    element.props.lineProps.x2 += deltaX
+    element.props.lineProps.y2 += deltaY
+  }
+}
+
+@CommandContext({
+  keybinds: [
+    ["h", "moveLeft"],
+    ["l", "moveRight"],
+    ["k", "moveUp"],
+    ["j", "moveDown"],
+    ["Escape", "exit"],
+  ],
+})
+export class LinePointEditContext
+  extends AbstractCommandContext
+  implements PointEditContext
+{
+  private _exitContext: Context = emptyContext
+
+  constructor(
+    private readonly editorService: EditorService,
+    private readonly element: LineNode,
+    private readonly gizmoManager: GizmoManager,
+    public name: string,
+    private readonly onMove: LineMoveHandler,
+    private readonly pointIndex: number
+  ) {
+    super()
+  }
+
+  @Command("moveLeft")
+  private moveLeft(): void {
+    this.movePoint(-SIZING_STEP, 0)
+  }
+
+  @Command("moveRight")
+  private moveRight(): void {
+    this.movePoint(SIZING_STEP, 0)
+  }
+
+  @Command("moveUp")
+  private moveUp(): void {
+    this.movePoint(0, -SIZING_STEP)
+  }
+
+  @Command("moveDown")
+  private moveDown(): void {
+    this.movePoint(0, SIZING_STEP)
+  }
+
+  setExitContext(context: Context): void {
+    this._exitContext = context
+  }
+
+  movePoint(deltaX: number, deltaY: number): void {
+    this.onMove(this.element, deltaX, deltaY)
+    this.editorService.setElementCanvasProps(
+      this.element.entityID,
+      this.element.props
+    )
+    this.updateGizmo()
+  }
+
+  private updateGizmo(): void {
+    const currentPosition = this.currentPosition()
+    this.gizmoManager.update({
+      x: currentPosition.x,
+      y: currentPosition.y,
+    })
+  }
+
+  onEntry(): void {
+    const currentPosition = this.currentPosition()
+    this.gizmoManager.addOrReplace(PointGizmo, {
+      x: currentPosition.x,
+      y: currentPosition.y,
+    })
+  }
+
+  private currentPosition(): Point {
+    const { p1, p2 } = this.element.geometryFn()
+    return [p1, p2][this.pointIndex]
+  }
+
+  @Command("exit")
+  private exit(): void {
+    this.editorService.navigateTo(this._exitContext)
+  }
+}
+
 @CommandContext({
   keybinds: [
     ["m", "move"],
-    ["h", "moveP2left"],
-    ["j", "moveP2down"],
-    ["k", "moveP2up"],
-    ["l", "moveP2right"],
+    ["p", "pointEdit"],
     ["e", "toggleEndMarker"],
     ["s", "toggleStartMarker"],
     ["Escape", "exit"],
@@ -142,8 +276,10 @@ export class LineNodeFactory implements ShapeFactory {
 })
 export class LineEditContext extends AbstractCommandContext {
   static MOVE_STEP = 10
+  static linePointEditContextFactory = new LinePointEditContextFactory()
   private readonly moveContext: MoveContext
   private readonly gizmoManager: GizmoManager
+  private readonly pointEditSelectContext: PointEditSelectContext<LineNode>
 
   constructor(
     private readonly editorService: EditorService,
@@ -160,10 +296,23 @@ export class LineEditContext extends AbstractCommandContext {
     )
     this.moveContext.setExitContext(this)
     this.editorService.registerContext(this.moveContext.name, this.moveContext)
+
+    this.pointEditSelectContext = new PointEditSelectContext(
+      this.editorService,
+      this.line,
+      this.gizmoManager,
+      `root/document/${line.entityID}/edit/points`,
+      LineEditContext.linePointEditContextFactory
+    )
+    this.pointEditSelectContext.setExitContext(this)
+    this.editorService.registerContext(
+      this.pointEditSelectContext.name,
+      this.pointEditSelectContext
+    )
   }
 
   onEntry(): void {
-    this.gizmoManager.addOrReplace(HighlightPolygon)
+    this.gizmoManager.addOrReplace(EditHighlightGizmo)
   }
 
   @Command("move")
@@ -171,28 +320,9 @@ export class LineEditContext extends AbstractCommandContext {
     this.editorService.navigateTo(this.moveContext.name)
   }
 
-  @Command("moveP2up")
-  private moveP2up(): void {
-    const nextY2 = this.line.props.lineProps.y2 - LineEditContext.MOVE_STEP
-    this.updateLineProps({ y2: nextY2 })
-  }
-
-  @Command("moveP2down")
-  private moveP2down(): void {
-    const nextY2 = this.line.props.lineProps.y2 + LineEditContext.MOVE_STEP
-    this.updateLineProps({ y2: nextY2 })
-  }
-
-  @Command("moveP2left")
-  private moveP2left(): void {
-    const nextX2 = this.line.props.lineProps.x2 - LineEditContext.MOVE_STEP
-    this.updateLineProps({ x2: nextX2 })
-  }
-
-  @Command("moveP2right")
-  private moveP2right(): void {
-    const nextX2 = this.line.props.lineProps.x2 + LineEditContext.MOVE_STEP
-    this.updateLineProps({ x2: nextX2 })
+  @Command("pointEdit")
+  private pointEdit(): void {
+    this.editorService.navigateTo(this.pointEditSelectContext.name)
   }
 
   @Command("toggleEndMarker")
