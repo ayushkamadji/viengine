@@ -11,6 +11,9 @@ export class BrowserWindow implements ApplicationWindow {
   constructor(_window: Window) {
     _window.addEventListener("keydown", this.onWindowEvent<KeyboardEvent>())
     _window.addEventListener("keyup", this.onWindowEvent<KeyboardEvent>())
+
+    // TODO: have this conditional by environment
+    // _window.addEventListener("contextmenu", (e) => e.preventDefault())
   }
 
   setEventCallback(callback: (event: ViEvent) => void): void {
@@ -19,6 +22,7 @@ export class BrowserWindow implements ApplicationWindow {
 
   private onWindowEvent<T extends Event>(): (event: T) => void {
     return (event: T) => {
+      event.preventDefault()
       const e = EventFactory.createEvent<T>(event)
 
       if (e.type !== "NoOp" && this.eventHandler) {

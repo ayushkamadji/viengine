@@ -1,18 +1,8 @@
-const jsxFragment = "jsx.Fragment"
-const jsxTextNode = "jsx.Text"
-
-// type TargetProps = {
-//   name: string
-//   id: string
-//   x: number
-//   y: number
-//   attributes: Map<string, string | number>
-//   classes: string[]
-//   children?: (TargetProps | string)[]
-// }
-
-function jsx(tag, props) {
-  if (typeof tag === "function") return tag(props)
+export function jsx(tag, props, ...children) {
+  if (tag === "Fragment" || tag === "fragment") {
+    console.log("Fragment detected")
+  }
+  if (typeof tag === "function") return tag(props, children)
 
   const targetProps = {
     name: tag,
@@ -34,7 +24,9 @@ function jsx(tag, props) {
   }
 }
 
-jsx.Fragment = jsxFragment
-jsx.TextNode = jsxTextNode
+export const Fragment = function (props, ..._children) {
+  // console.log("FRAGMENT")
+  return props.children
+}
 
-export { jsx, jsx as jsxs, jsxFragment as Fragment }
+export const jsxs = jsx
