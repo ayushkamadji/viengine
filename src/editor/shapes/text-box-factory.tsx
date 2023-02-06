@@ -21,6 +21,7 @@ import {
   PointEditSelectContext,
   PointGizmo,
 } from "./edit-context/point-edit-context"
+import { bodyFont, getTextWidth } from "../../lib/util/svg-text"
 
 export const HIGHLIGHT_COLOR = "#00ffff"
 export const SIZING_STEP = 10
@@ -321,8 +322,97 @@ export const TextBox: ElementFunction = ({
   return (
     <g {...gProps}>
       <rect {...rectProps}></rect>
-      <text {...textProps}>{text}</text>
+      <MultiLineText maxWidth={gProps.width} {...textProps} text={text} />
     </g>
+  )
+}
+
+export const MultiLineText: ElementFunction = ({ text, ...props }) => {
+  const lines = text.split("\n")
+  const lineProps = {
+    x: props.x,
+    "alignment-baseline": props["alignment-baseline"],
+    "text-anchor": props["text-anchor"],
+  }
+
+  const textElement = (
+    <text {...props}>
+      {lines
+        .map((line, index) => (
+          <WrappingLine
+            key={index}
+            text={`${line}`}
+            index={index}
+            maxWidth={props.maxWidth}
+            {...lineProps}
+          />
+        ))
+        .flat()}
+    </text>
+  )
+  if (textElement.props.children?.length) {
+    const totalLines = textElement.props.children.length
+    const totalHeightEm = (totalLines - 1) * 1.2
+    const firstDy = -1 * (totalHeightEm / 2)
+
+    for (let i = 0; i < totalLines; i++) {
+      textElement.props.children[i].props.attributes.dy = `${
+        i ? 1.2 : firstDy
+      }em`
+    }
+  }
+  return textElement
+}
+
+export const WrappingLine: ElementFunction = ({
+  text,
+  key,
+  index,
+  maxWidth,
+  ...props
+}) => {
+  const spaceWidth = getTextWidth(" ")
+  const words = text.split(" ")
+
+  const lines: string[] = []
+  let currentIndex = 0
+  for (const word of words) {
+    const wordWidth = getTextWidth(word)
+    const line = lines[currentIndex] || ""
+
+    if (line.length === 0) {
+      lines[currentIndex] = word
+    } else {
+      const totalWidth = getTextWidth(line) + spaceWidth + wordWidth
+      if (totalWidth >= maxWidth) {
+        lines[++currentIndex] = word
+      } else {
+        lines[currentIndex] += ` ${word}`
+      }
+    }
+  }
+
+  return (
+    <>
+      {lines.map((line, lineIndex) => {
+        const hidden = {}
+        if (line.length === 0) {
+          hidden["visibility"] = "hidden"
+        }
+        //TODO: Currently I don't know if there is another way to make double breaks
+        // display correctly other than using some char + visibility hidden
+        return (
+          <tspan
+            key={`${key}-${lineIndex}`}
+            dy={index || lineIndex ? "1.2em" : "0"}
+            {...hidden}
+            {...props}
+          >
+            {line.length ? line : "."}
+          </tspan>
+        )
+      })}
+    </>
   )
 }
 
@@ -348,6 +438,7 @@ export class TextBoxNode implements TextElement {
       x: 110,
       y: 50,
       fill: "white",
+      style: [`font: ${bodyFont}`], // TODO: too hacky
       "alignment-baseline": "middle",
       "text-anchor": "middle",
     },
