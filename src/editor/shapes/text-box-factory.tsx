@@ -408,7 +408,7 @@ export const WrappingLine: ElementFunction = ({
             {...hidden}
             {...props}
           >
-            {line.length ? line : "."}
+            {line.length ? line : "&ZeroWidthSpace;"}
           </tspan>
         )
       })}
