@@ -15,3 +15,14 @@ export function getTextWidth(text: string, font?: string): number {
 
   return width
 }
+
+export function getTextMetrics(text: string, font?: string): TextMetrics {
+  const tempFont = context.font
+  if (font) context.font = font
+
+  const metrics = context.measureText(text)
+
+  context.font = tempFont
+
+  return metrics
+}

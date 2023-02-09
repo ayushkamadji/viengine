@@ -24,9 +24,11 @@ export abstract class StemElement implements Element {
 
 type PropsWithText = {
   text: string
+  textProps: { x: number; y: number; lineHeight?: number }
 }
 
 export interface TextElement extends StemElement {
+  maxWidth: number
   props: PropsWithText
 }
 

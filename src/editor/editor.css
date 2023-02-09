@@ -72,3 +72,16 @@
   justify-content: center;
   align-items: center;
 }
+
+#text-cursor {
+  animation: blinkTranslucent 1s steps(2, jump-none) infinite;
+}
+
+@keyframes blinkTranslucent {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}

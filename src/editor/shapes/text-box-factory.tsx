@@ -10,7 +10,11 @@ import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { MoveContext } from "./edit-context/move-context"
-import { InsertModeContext } from "./edit-context/edit-text-context"
+import {
+  InsertModeContext,
+  NormalModeContext,
+  TextEditManager,
+} from "./edit-context/edit-text-context"
 import { TextBoxResizeContext } from "./edit-context/resize-context"
 import { GizmoManager } from "./gizmo-manager"
 import { EditHighlightGizmo } from "./edit-highlight-gizmo"
@@ -23,8 +27,11 @@ import {
 } from "./edit-context/point-edit-context"
 import { bodyFont, getTextWidth } from "../../lib/util/svg-text"
 
+// FIXME: A lot of magic numbers and strings in this file (e.g. 1.2 line spacing). Need to clean up.
+
 export const HIGHLIGHT_COLOR = "#00ffff"
 export const SIZING_STEP = 10
+const ZERO_WIDTH_SPACE = "\u200b"
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
@@ -217,6 +224,7 @@ export class TextBoxPoinEditContext
 })
 export class TextBoxEditContext extends AbstractCommandContext {
   static textBoxPointEditContextFactory = new TextBoxPointEditContextFactory()
+  private readonly normalModeContext: NormalModeContext
   private readonly insertModeContext: InsertModeContext
   private readonly moveContext: MoveContext
   private readonly resizeContext: TextBoxResizeContext
@@ -241,17 +249,35 @@ export class TextBoxEditContext extends AbstractCommandContext {
     this.moveContext.setExitContext(this)
     this.editorService.registerContext(this.moveContext.name, this.moveContext)
 
+    // Text Editing Context shenanigans
+    // TODO: this whole thing should be moved to a factory of some sort
+    const textEditManager = new TextEditManager(this.docElement)
     this.insertModeContext = new InsertModeContext(
       this.editorService,
       this.docElement,
       this.gizmoManager,
+      textEditManager,
       `root/document/${docElement.entityID}/edit/text/insert`
     )
-    this.insertModeContext.setExitContext(this)
+    this.normalModeContext = new NormalModeContext(
+      this.editorService,
+      this.docElement,
+      this.gizmoManager,
+      textEditManager,
+      this.insertModeContext,
+      `root/document/${docElement.entityID}/edit/text/normal`
+    )
+    this.normalModeContext.setExitContext(this)
+    this.editorService.registerContext(
+      this.normalModeContext.name,
+      this.normalModeContext
+    )
+    this.insertModeContext.setExitContext(this.normalModeContext)
     this.editorService.registerContext(
       this.insertModeContext.name,
       this.insertModeContext
     )
+    // End Text Editing Context shenanigan
 
     this.resizeContext = new TextBoxResizeContext(
       this.editorService,
@@ -328,11 +354,13 @@ export const TextBox: ElementFunction = ({
 }
 
 export const MultiLineText: ElementFunction = ({ text, ...props }) => {
+  const emSize = 16 // FIXME: get this from the font
   const lines = text.split("\n")
   const lineProps = {
     x: props.x,
     "alignment-baseline": props["alignment-baseline"],
     "text-anchor": props["text-anchor"],
+    emSize,
   }
 
   const textElement = (
@@ -357,8 +385,8 @@ export const MultiLineText: ElementFunction = ({ text, ...props }) => {
 
     for (let i = 0; i < totalLines; i++) {
       textElement.props.children[i].props.attributes.dy = `${
-        i ? 1.2 : firstDy
-      }em`
+        i ? 1.2 * emSize : firstDy * emSize
+      }`
     }
   }
   return textElement
@@ -369,6 +397,7 @@ export const WrappingLine: ElementFunction = ({
   key,
   index,
   maxWidth,
+  emSize,
   ...props
 }) => {
   const spaceWidth = getTextWidth(" ")
@@ -395,20 +424,13 @@ export const WrappingLine: ElementFunction = ({
   return (
     <>
       {lines.map((line, lineIndex) => {
-        const hidden = {}
-        if (line.length === 0) {
-          hidden["visibility"] = "hidden"
-        }
-        //TODO: Currently I don't know if there is another way to make double breaks
-        // display correctly other than using some char + visibility hidden
         return (
           <tspan
             key={`${key}-${lineIndex}`}
-            dy={index || lineIndex ? "1.2em" : "0"}
-            {...hidden}
+            dy={index || lineIndex ? 1.2 * emSize : 0}
             {...props}
           >
-            {line.length ? line : "&ZeroWidthSpace;"}
+            {line.length ? line : ZERO_WIDTH_SPACE}
           </tspan>
         )
       })}
@@ -451,6 +473,10 @@ export class TextBoxNode implements TextElement {
 
   get jsxElementFunction() {
     return TextBoxNode._jsxElementFunction
+  }
+
+  get maxWidth() {
+    return this.props.width
   }
 
   geometryFn = () => {
