@@ -141,17 +141,14 @@ export class InsertModeContext extends AbstractCommandContext {
     }
   }
 
-  private onKeyType(key: string | null) {
+  private onKeyType(key: string) {
     const currentText = this.docElement.props.text
     const insertIndex = this.textEditManager.getInsertIndex()
     const newText =
       currentText.slice(0, insertIndex) + key + currentText.slice(insertIndex)
     this.updateText(newText)
-    if (key === "\n") {
-      this.moveCursor(0, 1)
-    } else {
-      this.moveCursor(1, 0)
-    }
+    this.textEditManager.updateOnKeyType(key)
+    this.updateCursor()
   }
 
   @Command("backspace")
@@ -161,7 +158,6 @@ export class InsertModeContext extends AbstractCommandContext {
     const newText =
       currentText.slice(0, insertIndex - 1) + currentText.slice(insertIndex)
     this.updateText(newText)
-    this.moveCursor(-1, 0)
   }
 
   private updateText(text: string) {
@@ -198,6 +194,10 @@ export class InsertModeContext extends AbstractCommandContext {
 
   private moveCursor(deltaCol: CellDelta, deltaRow: CellDelta) {
     this.textEditManager.changePosition(deltaCol, deltaRow)
+    this.updateCursor()
+  }
+
+  private updateCursor() {
     const lineCursorProps = this.textEditManager.getLineCursorProps()
     this.gizmoManager.update({ ...lineCursorProps })
   }
@@ -377,17 +377,8 @@ export class TextEditManager {
   }
 
   private textLayoutMetrics(): TextLayoutMetrics {
-    const text = this.docElement.props.text
-    const rows = text.split("\n")
-    const maxWidth = this.docElement.maxWidth
     const spaceWidth = getTextWidth(" ")
-
-    const lines = rows
-      .map((row) => {
-        const words = row.split(" ")
-        return this.wrapLines(words, maxWidth, spaceWidth)
-      })
-      .flat()
+    const lines = this.getLines()
     const lineCount = lines.length
 
     const lineHeight = this.docElement.props.textProps.lineHeight || 1.2 * 16 // FIXME: 16 is the default font size
@@ -401,6 +392,22 @@ export class TextEditManager {
       firstLineYOffset,
       minWidth: spaceWidth,
     }
+  }
+
+  private getLines(textSlice?: string) {
+    const text = textSlice ? textSlice : this.docElement.props.text
+    const rows = text.split("\n")
+    const maxWidth = this.docElement.maxWidth
+    const spaceWidth = getTextWidth(" ")
+
+    const lines = rows
+      .map((row) => {
+        const words = row.split(" ")
+        return this.wrapLines(words, maxWidth, spaceWidth)
+      })
+      .flat()
+
+    return lines
   }
 
   private wrapLines(words: string[], maxWidth: number, spaceWidth: number) {
@@ -425,7 +432,7 @@ export class TextEditManager {
   }
 
   getInsertIndex() {
-    const { lines } = this.textLayoutMetrics()
+    const lines = this.getLines()
     let indexRowOffset = 0
     for (let i = 0; i < this.position.row; i++) {
       indexRowOffset += lines[i].length + 1
@@ -434,5 +441,52 @@ export class TextEditManager {
     const index = indexRowOffset + this.position.col + indexSideOffset
 
     return index
+  }
+
+  updateOnKeyType(key: string) {
+    switch (key) {
+      case "\n":
+        this.position.row += 1
+        this.position.col = 0
+        this.memorizedColumn = 0
+        break
+      default:
+        this.changeColumnFluid(1)
+    }
+  }
+
+  private changeColumnFluid(deltaCol: CellDelta) {
+    // const lines = this.getLines()
+    const targetIndex = this.getInsertIndex() + deltaCol
+    // const insertSideOffset = this.insertSide === "left" ? 0 : 1
+
+    const textUpToIndex = this.docElement.props.text.slice(0, targetIndex)
+    // const currentIndex = textUpToIndex.length
+    const linesUpToIndex = this.getLines(textUpToIndex)
+    const row = linesUpToIndex.length - 1
+    // let row = 0
+    // let currentIndex = 0
+    // for (let i = 0; i < lines.length; i++) {
+    //   const nextIndex = currentIndex + lines[i].length
+    //   if (nextIndex <= targetIndex) {
+    //     currentIndex = nextIndex + 1
+    //     row = i
+    //   } else {
+    //     currentIndex -= 1
+    //     break
+    //   }
+    // }
+
+    const col = linesUpToIndex[row].length - 1
+    // let col = 0
+    // if (targetIndex - currentIndex - insertSideOffset > 0) {
+    //   col = targetIndex - currentIndex - insertSideOffset
+    // } else {
+    //   col = this.insertSide === "left" ? 0 : lines[row].length - 1
+    // }
+
+    this.position.row = row
+    this.position.col = col
+    this.memorizedColumn = this.position.col
   }
 }

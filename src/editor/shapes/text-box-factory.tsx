@@ -31,7 +31,8 @@ import { bodyFont, getTextWidth } from "../../lib/util/svg-text"
 
 export const HIGHLIGHT_COLOR = "#00ffff"
 export const SIZING_STEP = 10
-const ZERO_WIDTH_SPACE = "\u200b"
+export const ZERO_WIDTH_SPACE = "\u200b"
+export const NON_BREAKING_SPACE = "\u00a0"
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
