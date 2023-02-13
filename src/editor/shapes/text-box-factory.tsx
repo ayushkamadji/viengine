@@ -82,8 +82,8 @@ export class TextBoxPointEditContextFactory
     gizmoManager: GizmoManager,
     parentName: string,
     index: number
-  ): TextBoxPoinEditContext {
-    return new TextBoxPoinEditContext(
+  ): TextBoxPointEditContext {
+    return new TextBoxPointEditContext(
       editorService,
       element,
       gizmoManager,
@@ -131,7 +131,7 @@ export class TextBoxPointEditContextFactory
     ["Escape", "exit"],
   ],
 })
-export class TextBoxPoinEditContext
+export class TextBoxPointEditContext
   extends AbstractCommandContext
   implements PointEditContext
 {

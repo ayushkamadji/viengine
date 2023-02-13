@@ -2,7 +2,6 @@ import { EditorService } from "../../editor-service"
 import { Command, CommandContext } from "../../context/command-decorator"
 import {
   AbstractCommandContext,
-  AbstractContext,
   Context,
   emptyContext,
 } from "../../context/context.interface"
@@ -11,11 +10,26 @@ import { KeyDownEvent } from "../../../lib/keyboard-event"
 import type { TextElement } from "../../vieditor-element"
 import { GizmoManager } from "../gizmo-manager"
 
-export class NormalModeContext extends AbstractContext {
-  name = "NormalModeContext"
+@CommandContext({ keybinds: [] })
+export class NormalModeContext extends AbstractCommandContext {
+  private exitContext: Context = emptyContext
 
-  constructor(private readonly editorService: EditorService) {
+  constructor(
+    private readonly editorService: EditorService,
+    private docElement: TextElement,
+    private readonly gizmoManager: GizmoManager,
+    public name: string
+  ) {
     super()
+  }
+
+  setExitContext(context: Context) {
+    this.exitContext = context
+  }
+
+  @Command("exit")
+  private exit(): void {
+    this.editorService.navigateTo(this.exitContext)
   }
 }
 
