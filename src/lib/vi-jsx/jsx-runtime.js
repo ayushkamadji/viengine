@@ -4,6 +4,15 @@ export function jsx(tag, props, ...children) {
   }
   if (typeof tag === "function") return tag(props, children)
 
+  if (typeof props.style === "object") {
+    const kebabizedStyle = kebabize(props.style)
+    props.style = Object.keys(kebabizedStyle)
+      .map((key) => {
+        return `${key}:${kebabizedStyle[key]}`
+      })
+      .join(";")
+  }
+
   const targetProps = {
     name: tag,
     id: props.id,
@@ -30,3 +39,14 @@ export const Fragment = function (props, ..._children) {
 }
 
 export const jsxs = jsx
+
+const kebabize = (obj) => {
+  const result = {}
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key]
+      result[key.replace(/([A-Z])/g, "-$1").toLowerCase()] = value
+    }
+  }
+  return result
+}

@@ -21,9 +21,11 @@ import {
   PointEditSelectContext,
   PointGizmo,
 } from "./edit-context/point-edit-context"
+import { bodyFont, fontSize, TextEditorUtil } from "../../lib/util/svg-text"
 
 export const HIGHLIGHT_COLOR = "#00ffff"
 export const SIZING_STEP = 10
+export const LINE_HEIGHT_FONT_MULTIPLIER = 1.2
 
 export class TextBoxFactory implements ShapeFactory {
   editorElement = TextBoxNode
@@ -318,10 +320,35 @@ export const TextBox: ElementFunction = ({
   textProps: SVGProps<SVGTextElement>
   text: string
 } & SVGProps<SVGGElement>) => {
+  const lines = TextEditorUtil.getLines(text)
+  const tSpanProps = {
+    "text-anchor": textProps["text-anchor"],
+    "alignment-baseline": textProps["alignment-baseline"],
+  }
+
   return (
     <g {...gProps}>
       <rect {...rectProps}></rect>
-      <text {...textProps}>{text}</text>
+      <text {...textProps}>
+        {lines.map((line, i) => {
+          const dy = TextEditorUtil.getLineYOffset(
+            i,
+            lines.length,
+            textProps.style!.lineHeight as number
+          )
+
+          return (
+            <tspan
+              key={`text-${gProps.id}-${i}`}
+              x={textProps.x}
+              dy={dy}
+              {...tSpanProps}
+            >
+              {line}
+            </tspan>
+          )
+        })}
+      </text>
     </g>
   )
 }
@@ -337,6 +364,7 @@ export class TextBoxNode implements TextElement {
     width: 220,
     height: 100,
     text: "",
+    id: this.entityID,
     rectProps: {
       x: 0,
       y: 0,
@@ -347,7 +375,11 @@ export class TextBoxNode implements TextElement {
     textProps: {
       x: 110,
       y: 50,
-      fill: "white",
+      style: {
+        font: bodyFont,
+        lineHeight: fontSize * LINE_HEIGHT_FONT_MULTIPLIER,
+      },
+      fill: "#fff",
       "alignment-baseline": "middle",
       "text-anchor": "middle",
     },
