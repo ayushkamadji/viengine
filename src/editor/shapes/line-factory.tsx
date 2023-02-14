@@ -19,6 +19,7 @@ import {
   PointGizmo,
 } from "./edit-context/point-edit-context"
 import { SIZING_STEP } from "./text-box-factory"
+import { cloneDeep } from "lodash"
 
 export const Line: ElementFunction = ({ gProps, lineProps }) => {
   return (
@@ -138,6 +139,24 @@ export class LineNodeFactory implements ShapeFactory {
       `root/document/${entity}/edit`
     )
     this.editorService.registerContext(editContext.name, editContext)
+  }
+
+  duplicate(
+    element: LineNode,
+    position?: { x: number; y: number } | undefined
+  ): void {
+    const entity = this.editorService.generateEntity()
+    const props = cloneDeep(element.props)
+    const docElement = new this.editorElement(entity)
+    docElement.props = props
+    docElement.setPosition(
+      position?.x ?? element.position.x,
+      position?.y ?? element.position.y
+    )
+    this.editorService.addElement(docElement)
+
+    this.registerContexts(docElement)
+    this.editorService.navigateTo(`root/document/${entity}/edit`)
   }
 }
 

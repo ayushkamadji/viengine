@@ -15,6 +15,7 @@ specifiers:
   '@pmmmwh/react-refresh-webpack-plugin': ^0.5.10
   '@tauri-apps/api': ^1.2.0
   '@types/d3-polygon': ^3.0.0
+  '@types/lodash': ^4.14.191
   '@types/node': ^18.11.9
   '@types/react': ^18.0.25
   '@types/react-dom': ^18.0.9
@@ -40,6 +41,7 @@ specifiers:
   html-webpack-plugin: ^5.5.0
   husky: ^8.0.0
   lint-staged: ^13.0.4
+  lodash: ^4.17.21
   prettier: ^2.8.0
   react: ^18.2.0
   react-refresh: ^0.14.0
@@ -55,9 +57,11 @@ specifiers:
 
 dependencies:
   '@tauri-apps/api': 1.2.0
+  '@types/lodash': 4.14.191
   '@vijsx/jsx-runtime': link:src/lib/vi-jsx
   class-transformer: 0.5.1
   d3-polygon: 3.0.1
+  lodash: 4.17.21
   react: 18.2.0
 
 devDependencies:
@@ -1945,6 +1949,10 @@ packages:
   /@types/json5/0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: true
+
+  /@types/lodash/4.14.191:
+    resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
+    dev: false
 
   /@types/mime/3.0.1:
     resolution: {integrity: sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==}
@@ -5288,7 +5296,6 @@ packages:
 
   /lodash/4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-    dev: true
 
   /log-symbols/4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}

@@ -8,7 +8,7 @@ import {
   UIRendererComponent,
 } from "./ecs-systems/render-system"
 import { ElementFunction } from "./ecs-systems/renderer-element"
-import { UI, Canvas, Util, EditorLayer } from "./editor"
+import { UI, Canvas, Util, EditorLayer, Clipboard } from "./editor"
 import { Document, StemElement } from "./vieditor-element"
 import { SelectorComponent } from "./ecs-systems/selector-system"
 import { Geometry, isLine, isPolygon, Point } from "../lib/util/geometry"
@@ -24,6 +24,7 @@ import { ElementClass, ElementFactoryRegistry } from "./shapes/shape-factory"
 import { DialogFilter, SystemUtil } from "../lib/system-util"
 import { DocumentUtil } from "../lib/document-util"
 import { CanvasRenderer } from "../lib/canvas-renderer"
+import { cloneDeep } from "lodash"
 
 export const HIGHLIGH_OFFSET = 20
 export const VICALC_FILE_FILTER: DialogFilter = {
@@ -48,7 +49,8 @@ export class EditorService {
     private readonly hintsEntity: Entity,
     private readonly systemUtil: SystemUtil,
     private readonly documentUtil: DocumentUtil,
-    private readonly canvasRenderer: CanvasRenderer
+    private readonly canvasRenderer: CanvasRenderer,
+    private readonly clipboard: Clipboard
   ) {
     this.factoryRegistry = new ElementFactoryRegistry(this) // FIXME: circular dep
   }
@@ -328,5 +330,31 @@ export class EditorService {
 
   removeComponent(entity: Entity, component: ComponentClass) {
     this.entityManager.removeComponent(entity, component)
+  }
+
+  copyElement(entity: Entity) {
+    const element = this.canvas.findElementByEntity(entity)
+
+    if (element) {
+      const clone = cloneDeep(element)
+      this.clipboard.push(clone)
+    }
+  }
+
+  cutElement(entity: Entity) {
+    this.copyElement(entity)
+    this.removeEntity(entity)
+  }
+
+  pasteElement() {
+    const element = this.clipboard.peek()
+
+    if (element) {
+      const factory = this.factoryRegistry.getFactory(
+        element.constructor as ElementClass
+      )
+      const [x, y] = this.getCursorXY()
+      factory?.duplicate(element, { x, y })
+    }
   }
 }

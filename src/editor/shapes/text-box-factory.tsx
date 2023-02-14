@@ -26,6 +26,7 @@ import {
   PointGizmo,
 } from "./edit-context/point-edit-context"
 import { bodyFont, fontSize, TextEditorUtil } from "../../lib/util/svg-text"
+import { cloneDeep } from "lodash"
 
 export const HIGHLIGHT_COLOR = "#00ffff"
 export const SIZING_STEP = 10
@@ -65,6 +66,24 @@ export class TextBoxFactory implements ShapeFactory {
       `root/document/${entity}/edit`
     )
     this.editorService.registerContext(editContext.name, editContext)
+  }
+
+  duplicate(
+    element: TextBoxNode,
+    position?: { x: number; y: number } | undefined
+  ): void {
+    const entity = this.editorService.generateEntity()
+    const props = cloneDeep(element.props)
+    const docElement = new this.editorElement(entity, element.props.text)
+    docElement.props = props
+    docElement.setPosition(
+      position?.x ?? element.position.x,
+      position?.y ?? element.position.y
+    )
+    this.editorService.addElement(docElement)
+
+    this.registerContexts(docElement)
+    this.editorService.navigateTo(`root/document/${entity}/edit`)
   }
 }
 

@@ -35,7 +35,7 @@ export interface TextElement extends StemElement {
   props: PropsWithText
 }
 
-export class Document implements Element {
+export class Document implements Element, EntitySearchable {
   entityID = 0
   name = "document"
   @Type(() => StemElement, {
@@ -59,6 +59,14 @@ export class Document implements Element {
       this.children.splice(index, 1)
     }
   }
+
+  findElementByEntity(entity: number): StemElement | undefined {
+    return this.children.find((e) => e.entityID === entity)
+  }
+}
+
+export interface EntitySearchable {
+  findElementByEntity(entity: number): StemElement | undefined
 }
 
 // export default { Document, Node, TextBoxNode, Element }

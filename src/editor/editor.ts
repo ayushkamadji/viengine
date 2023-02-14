@@ -17,7 +17,7 @@ import { Cursor, GridPoint, Hints } from "./editor-components"
 import { EditorService } from "./editor-service"
 import { ElementFactoryRegistry } from "./shapes/shape-factory"
 import { TextBoxFactory, TextBoxNode } from "./shapes/text-box-factory"
-import { Document } from "./vieditor-element"
+import { Document, StemElement } from "./vieditor-element"
 import { LineNode, LineNodeFactory } from "./shapes/line-factory"
 import { HighlightParams, SelectorSystem } from "./ecs-systems/selector-system"
 import { Line } from "../lib/util/geometry"
@@ -95,6 +95,22 @@ export class UI {
 export class Canvas {
   document: Document = new Document()
   constructor() {}
+
+  findElementByEntity(entity: Entity): StemElement | undefined {
+    return this.document.findElementByEntity(entity)
+  }
+}
+
+export class Clipboard {
+  private elementStack: StemElement[] = []
+
+  push(element: StemElement) {
+    this.elementStack.push(element)
+  }
+
+  peek(): StemElement | undefined {
+    return this.elementStack[this.elementStack.length - 1]
+  }
 }
 
 export class EditorLayer implements Layer {
@@ -113,6 +129,7 @@ export class EditorLayer implements Layer {
   private factoryRegistry: ElementFactoryRegistry
   private selectorSystem: SelectorSystem
   private rootContext: RootContext
+  private clipboard: Clipboard = new Clipboard()
 
   constructor(
     private readonly uiRenderer: UIRenderer,
@@ -157,7 +174,8 @@ export class EditorLayer implements Layer {
       hintsEntity,
       this.systemUtil,
       this.documentUtil,
-      this.canvasRenderer
+      this.canvasRenderer,
+      this.clipboard
     )
 
     this.factoryRegistry = this.editorService.getFactoryRegistry()

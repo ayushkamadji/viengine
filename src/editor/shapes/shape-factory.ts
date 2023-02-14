@@ -6,6 +6,11 @@ export interface ShapeFactory {
   name: string
   create(...args: any[]): void
   load(element: StemElement, ...args: any[]): void
+  duplicate(
+    element: StemElement,
+    position?: { x: number; y: number },
+    ...args: any[]
+  ): void
 }
 
 export type ElementClass = { new (...args: any[]): Element }

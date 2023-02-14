@@ -24,6 +24,8 @@ export class HighlightContextFactory implements ContextFactory {
     ["k", "moveUp"],
     ["l", "moveRight"],
     ["d", "delete"],
+    ["x", "delete"],
+    ["y", "yank"],
     ["Enter", "edit"],
   ],
 })
@@ -70,7 +72,13 @@ export class HighlightContext extends AbstractCommandContext {
 
   @Command("delete")
   private delete(): void {
-    this.editorService.removeEntity(this.entity)
+    this.editorService.cutElement(this.entity)
+    this.exit()
+  }
+
+  @Command("yank")
+  private yank(): void {
+    this.editorService.copyElement(this.entity)
     this.exit()
   }
 

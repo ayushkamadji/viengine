@@ -15,6 +15,7 @@ const keybindsJson = {
   k: "moveUp",
   l: "moveRight",
   Enter: "createNode",
+  p: "put",
   e: "open",
   w: "save",
   "shift+;": "menu",
@@ -114,6 +115,11 @@ export class RootContext extends AbstractCommandContext {
   @Command("menu")
   private menu(): void {
     this.editorService.navigateTo(this.rootMenuContext)
+  }
+
+  @Command("put")
+  private put(): void {
+    this.editorService.pasteElement()
   }
 
   private moveCursor(deltaX: number, deltaY: number): void {
