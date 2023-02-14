@@ -34,7 +34,7 @@ export class ContextNavigator {
         this.currentContext = context
       }
 
-      this.currentContext.onEntry()
+      this.currentContext.onEntry(...args)
     }
   }
 

@@ -1,5 +1,5 @@
 // const WORD_REGEX = /(\S+)(\s*)/g
-const LINE_REGEX = /((.*\n)|(.+$))/g
+const LINE_REGEX = /((.*\n)|(.+$)|(^$))/g
 const FONT_SIZE_REGEX = /(\d+)/g
 
 const canvas = document.createElement("canvas")
@@ -43,7 +43,14 @@ export class TextEditorUtil {
 
   private static getLineRows(text: string) {
     const escapedText = text.replace(/ /g, NON_BREAKING_SPACE)
-    const lines = escapedText.match(LINE_REGEX) || []
+    const lines: string[] = escapedText.match(LINE_REGEX) || []
+
+    // TODO: is there a better way? We cannot use lookbehind because of WebKit
+    const lastLine = lines[lines.length - 1]
+    if (lastLine[lastLine.length - 1] === "\n") {
+      lines.push("")
+    }
+
     const escapedLines = lines.map((line) =>
       line.replace(/\n/g, ZERO_WIDTH_SPACE)
     )

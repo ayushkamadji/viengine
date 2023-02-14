@@ -16,7 +16,7 @@ export abstract class AbstractContext implements Context {
   name = ""
 
   async onEvent(_event: Event): Promise<void> {}
-  onEntry(): void {}
+  onEntry(_params?: any): void {}
   onExit(): void {}
   onRemove(): void {}
 }

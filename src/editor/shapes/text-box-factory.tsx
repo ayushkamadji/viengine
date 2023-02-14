@@ -248,27 +248,29 @@ export class TextBoxEditContext extends AbstractCommandContext {
     this.moveContext.setExitContext(this)
     this.editorService.registerContext(this.moveContext.name, this.moveContext)
 
+    // Text edit context
     this.textEditor = new TextEditor(this.docElement)
+    this.insertModeContext = new InsertModeContext(
+      this.editorService,
+      this.docElement,
+      this.gizmoManager,
+      this.textEditor,
+      `root/document/${docElement.entityID}/edit/text/insert`
+    )
     this.normalModeContext = new NormalModeContext(
       this.editorService,
       this.docElement,
       this.gizmoManager,
       this.textEditor,
+      this.insertModeContext,
       `root/document/${docElement.entityID}/edit/text/normal`
     )
     this.normalModeContext.setExitContext(this)
+    this.insertModeContext.setExitContext(this.normalModeContext)
     this.editorService.registerContext(
       this.normalModeContext.name,
       this.normalModeContext
     )
-
-    this.insertModeContext = new InsertModeContext(
-      this.editorService,
-      this.docElement,
-      this.gizmoManager,
-      `root/document/${docElement.entityID}/edit/text/insert`
-    )
-    this.insertModeContext.setExitContext(this.normalModeContext)
     this.editorService.registerContext(
       this.insertModeContext.name,
       this.insertModeContext
@@ -310,7 +312,9 @@ export class TextBoxEditContext extends AbstractCommandContext {
 
   @Command("insert")
   private insert(): void {
-    this.editorService.navigateTo(this.insertModeContext)
+    this.editorService.navigateTo(this.insertModeContext, {
+      insertPosition: "end",
+    })
   }
 
   @Command("resize")
