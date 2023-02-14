@@ -460,8 +460,10 @@ export class InsertModeContext extends AbstractCommandContext {
 
   @Command("backspace")
   private backspace(): void {
-    const currentText = this.docElement.props.text
     const insertIndex = this.textEditor.getInsertIndex()
+    if (insertIndex <= 0) return
+
+    const currentText = this.docElement.props.text
     const newText =
       currentText.slice(0, insertIndex - 1) + currentText.slice(insertIndex)
     this.updateText(newText)
