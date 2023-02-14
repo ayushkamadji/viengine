@@ -136,6 +136,9 @@ export class UIRenderer {
 
   clearStaticElements() {
     this.staticElements.length = 0
+    while (this.staticRootElement.lastChild) {
+      this.staticRootElement.removeChild(this.staticRootElement.lastChild)
+    }
   }
 
   render() {

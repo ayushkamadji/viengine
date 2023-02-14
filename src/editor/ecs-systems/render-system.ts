@@ -135,6 +135,7 @@ export class StaticUIRendererSystem extends UIRendererSystem {
   protected requiredComponents: ComponentClass[] = [StaticUIRendererComponent]
 
   update(): void {
+    this.uiRenderer.clearStaticElements()
     const entities = this.entityManager.getEntitiesWithComponents(
       this.requiredComponents
     )

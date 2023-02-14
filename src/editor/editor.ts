@@ -23,6 +23,7 @@ import { HighlightParams, SelectorSystem } from "./ecs-systems/selector-system"
 import { Line } from "../lib/util/geometry"
 import { SystemUtil } from "../lib/system-util"
 import { DocumentUtil } from "../lib/document-util"
+import { WindowResizeEvent } from "../lib/window-event"
 
 export class Util {
   static cursorColRowToCanvasXY(col: number, row: number): [number, number] {
@@ -183,7 +184,7 @@ export class EditorLayer implements Layer {
     this.factoryRegistry.registerFactory(TextBoxNode, TextBoxFactory)
     this.factoryRegistry.registerFactory(LineNode, LineNodeFactory)
 
-    this.addUIGrid()
+    this.addUIGrid(this.uiRenderer.getSize())
     this.staticUIRendererSystem.update()
 
     this.addCursor(cursorEntity)
@@ -202,11 +203,33 @@ export class EditorLayer implements Layer {
     const context = this.contextNavigator.getCurrentContext()
     try {
       await context.onEvent(event)
+
+      if (event instanceof WindowResizeEvent) {
+        this.onWindowResize(event)
+      }
     } catch (_e) {
       //TODO: handle event handling error
     } finally {
       this.render()
     }
+  }
+
+  private onWindowResize(_event: WindowResizeEvent) {
+    const entities = this.entityManager.getEntitiesWithComponents([
+      StaticUIRendererComponent,
+    ])
+    entities.forEach((entity) => {
+      this.entityManager.removeEntity(entity)
+    })
+    const { width, height } = this.uiRenderer.getSize()
+    this.addUIGrid({ width, height })
+    this.staticUIRendererSystem.update()
+  }
+
+  private getStaticEntities() {
+    return this.entityManager.getEntitiesWithComponents([
+      StaticUIRendererComponent,
+    ])
   }
 
   private render() {
@@ -233,8 +256,7 @@ export class EditorLayer implements Layer {
     this.entityManager.addComponent(entity, uiRendererComponent)
   }
 
-  private addUIGrid() {
-    const { width, height } = this.uiRenderer.getSize()
+  private addUIGrid({ width, height }) {
     const maxColumns = Math.ceil(width / EditorLayer.GRID_GAP)
     const maxRows = Math.ceil(height / EditorLayer.GRID_GAP)
     for (let i = 1; i < maxColumns; i++) {
