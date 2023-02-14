@@ -9,8 +9,8 @@ export const bodyFont = bodyStyle.font
 context.font = bodyFont
 export const fontSize = Number(bodyStyle.fontSize.match(FONT_SIZE_REGEX)![0])
 
-const ZERO_WIDTH_SPACE = "\u200b"
-const NON_BREAKING_SPACE = "\u00a0"
+export const ZERO_WIDTH_SPACE = "\u200b"
+export const NON_BREAKING_SPACE = "\u00a0"
 
 export function getTextWidth(text: string, font?: string): number {
   const tempFont = context.font
@@ -34,15 +34,9 @@ export function getTextMetrics(text: string, font?: string): TextMetrics {
   return metrics
 }
 
-export class TextEditor {
-  constructor(private text, private font: string) {}
-
-  getLines() {
-    return TextEditorUtil.getLines(this.text, undefined, this.font)
-  }
-}
-
 export class TextEditorUtil {
+  private static context2d = context
+
   static getLines(text: string, _maxWidth?: number, _font?: string) {
     return this.getLineRows(text)
   }
@@ -56,7 +50,7 @@ export class TextEditorUtil {
     return escapedLines
   }
 
-  static getLineYOffset(
+  static getLineDYOffset(
     lineIndex: number,
     totalLines: number,
     lineHeight: number
@@ -66,5 +60,28 @@ export class TextEditorUtil {
     const firstOffset = -1 * (totalHeight / 2)
 
     return lineIndex ? lineHeight : firstOffset
+  }
+
+  static getLineYOffset(
+    lineIndex: number,
+    totalLines: number,
+    lineHeight: number
+  ) {
+    // Vertical middle aligned text
+    const totalHeight = (totalLines - 1) * lineHeight
+    const firstOffset = -1 * (totalHeight / 2)
+
+    return lineIndex ? firstOffset + lineHeight * lineIndex : firstOffset
+  }
+
+  static getTextWidth(text: string, font?: string) {
+    const tempFont = this.context2d.font
+    if (font) this.context2d.font = font
+
+    const width = this.context2d.measureText(text).width
+
+    context.font = tempFont
+
+    return width
   }
 }

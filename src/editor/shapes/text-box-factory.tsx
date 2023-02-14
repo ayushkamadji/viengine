@@ -10,7 +10,11 @@ import type { Element, Point, TextElement } from "../vieditor-element"
 import { ElementFunction } from "../ecs-systems/renderer-element"
 import { SVGProps } from "react"
 import { MoveContext } from "./edit-context/move-context"
-import { InsertModeContext } from "./edit-context/edit-text-context"
+import {
+  InsertModeContext,
+  NormalModeContext,
+  TextEditor,
+} from "./edit-context/edit-text-context"
 import { TextBoxResizeContext } from "./edit-context/resize-context"
 import { GizmoManager } from "./gizmo-manager"
 import { EditHighlightGizmo } from "./edit-highlight-gizmo"
@@ -219,10 +223,12 @@ export class TextBoxPointEditContext
 export class TextBoxEditContext extends AbstractCommandContext {
   static textBoxPointEditContextFactory = new TextBoxPointEditContextFactory()
   private readonly insertModeContext: InsertModeContext
+  private readonly normalModeContext: NormalModeContext
   private readonly moveContext: MoveContext
   private readonly resizeContext: TextBoxResizeContext
   private readonly pointEditSelectContext: PointEditSelectContext<TextBoxNode>
   private readonly gizmoManager: GizmoManager
+  private readonly textEditor: TextEditor
 
   constructor(
     private readonly editorService: EditorService,
@@ -242,13 +248,27 @@ export class TextBoxEditContext extends AbstractCommandContext {
     this.moveContext.setExitContext(this)
     this.editorService.registerContext(this.moveContext.name, this.moveContext)
 
+    this.textEditor = new TextEditor(this.docElement)
+    this.normalModeContext = new NormalModeContext(
+      this.editorService,
+      this.docElement,
+      this.gizmoManager,
+      this.textEditor,
+      `root/document/${docElement.entityID}/edit/text/normal`
+    )
+    this.normalModeContext.setExitContext(this)
+    this.editorService.registerContext(
+      this.normalModeContext.name,
+      this.normalModeContext
+    )
+
     this.insertModeContext = new InsertModeContext(
       this.editorService,
       this.docElement,
       this.gizmoManager,
       `root/document/${docElement.entityID}/edit/text/insert`
     )
-    this.insertModeContext.setExitContext(this)
+    this.insertModeContext.setExitContext(this.normalModeContext)
     this.editorService.registerContext(
       this.insertModeContext.name,
       this.insertModeContext
@@ -331,7 +351,7 @@ export const TextBox: ElementFunction = ({
       <rect {...rectProps}></rect>
       <text {...textProps}>
         {lines.map((line, i) => {
-          const dy = TextEditorUtil.getLineYOffset(
+          const dy = TextEditorUtil.getLineDYOffset(
             i,
             lines.length,
             textProps.style!.lineHeight as number

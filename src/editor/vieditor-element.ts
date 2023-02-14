@@ -25,6 +25,8 @@ export abstract class StemElement implements Element {
 type PropsWithText = {
   text: string
   textProps: {
+    x: number
+    y: number
     style: { font: string; lineHeight: number }
   }
 }
