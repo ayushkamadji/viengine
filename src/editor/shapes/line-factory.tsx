@@ -117,7 +117,7 @@ export class LineNodeFactory implements ShapeFactory {
     this.editorService.addElementAtCursor(docElement)
 
     this.registerContexts(docElement)
-    this.editorService.navigateTo(`root/document/${entity}/edit`)
+    this.editorService.navigateTo(`root/document/${entity}/edit/points/2`)
   }
 
   load(docElement: LineNode) {
