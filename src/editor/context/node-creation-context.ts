@@ -53,7 +53,7 @@ export class NodeCreationContext extends AbstractCommandContext {
   }
 
   @Command("textBox")
-  private createTextBox(text = "hello world"): void {
+  private createTextBox(text = ""): void {
     this.destroyMenu()
     this.createElementNode(TextBoxNode, text)
   }
