@@ -16,7 +16,7 @@ export class BrowserWindow implements ApplicationWindow {
     _window.addEventListener("resize", debounce(this.onWindowEvent<Event>()))
 
     // TODO: have this conditional by environment
-    if (process.env.NODE_ENV === "prod") {
+    if (process.env.NODE_ENV === "production") {
       _window.addEventListener("contextmenu", (e) => e.preventDefault())
     }
   }
