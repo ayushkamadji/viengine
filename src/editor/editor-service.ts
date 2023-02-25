@@ -344,6 +344,7 @@ export class EditorService {
   cutElement(entity: Entity) {
     this.copyElement(entity)
     this.removeEntity(entity)
+    this.canvas.document.removeElementByEntity(entity)
   }
 
   pasteElement() {

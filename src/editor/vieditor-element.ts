@@ -60,6 +60,13 @@ export class Document implements Element, EntitySearchable {
     }
   }
 
+  removeElementByEntity(entity: number): void {
+    const element = this.findElementByEntity(entity)
+    if (element) {
+      this.removeElement(element)
+    }
+  }
+
   findElementByEntity(entity: number): StemElement | undefined {
     return this.children.find((e) => e.entityID === entity)
   }
