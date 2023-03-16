@@ -234,7 +234,6 @@ export class TextBoxPointEditContext
   keybinds: [
     ["i", "insert"],
     ["m", "move"],
-    ["r", "resize"],
     ["p", "pointEdit"],
     ["Escape", "exit"],
   ],
@@ -334,11 +333,6 @@ export class TextBoxEditContext extends AbstractCommandContext {
     this.editorService.navigateTo(this.insertModeContext, {
       insertPosition: "end",
     })
-  }
-
-  @Command("resize")
-  private resize(): void {
-    this.editorService.navigateTo(this.resizeContext)
   }
 
   @Command("pointEdit")

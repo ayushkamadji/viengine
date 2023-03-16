@@ -9,6 +9,7 @@ import { TextBoxNode } from "../text-box-factory"
 
 const MOVE_STEP = 10
 
+// TODO: Deprecate (will be redone when implementing dimension resizable shapes)
 export class ResizeContext extends AbstractCommandContext {}
 
 @CommandContext({
