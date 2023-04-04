@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.2.1](https://github.com/ayushkamadji/viengine/compare/v0.2.0...v0.2.1) (2023-04-04)
+
+
+### Bug Fixes
+
+* **ctx-menu:** fix context menu still showing up in production ([93da5f2](https://github.com/ayushkamadji/viengine/commit/93da5f2c579ed774b31c8bc57c6fafef6f38a94e))
+* **element-delete:** fix bug element not deleted in element tree when being cut/deleted ([147e774](https://github.com/ayushkamadji/viengine/commit/147e7745dcfc379f5935063eb2cf4994547f9ac9))
+
 ## 0.2.0 (2023-02-15)
 
 
